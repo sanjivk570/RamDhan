@@ -1,59 +1,458 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# RamDhan API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Enterprise-grade Laravel 12 REST API Boilerplate built using a modular architecture.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+# Technology Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Laravel 12
+- PHP 8.3+
+- MySQL
+- Laravel Sanctum
+- Spatie Laravel Permission
+- Repository Pattern
+- Service Layer
+- Action Pattern
+- API Resources
+- Form Requests
+- UUID Support
+- Soft Deletes
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+# Project Architecture
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```
+app
+│
+├── Core
+│   ├── Enums
+│   ├── Exceptions
+│   ├── Helpers
+│   ├── Http
+│   ├── Requests
+│   ├── Traits
+│   └── Services
+│
+├── Modules
+│   │
+│   ├── Auth
+│   │
+│   ├── User
+│   │
+│   └── Role
+│
+└── Providers
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Each module follows the same structure.
 
-## Laravel Sponsors
+```
+Module
+│
+├── Actions
+├── Controllers
+├── Models
+├── Repositories
+├── Requests
+├── Resources
+├── Routes
+├── Seeders
+└── Services
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+# Request Flow
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```
+Request
 
-## Contributing
+↓
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Route
 
-## Code of Conduct
+↓
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Controller
 
-## Security Vulnerabilities
+↓
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Action
 
-## License
+↓
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Service
+
+↓
+
+Repository
+
+↓
+
+Model
+
+↓
+
+Database
+```
+
+---
+
+# Features Completed
+
+## Authentication
+
+- User Registration
+- Login
+- Logout
+- Profile
+- Change Password
+- Forgot Password
+- Reset Password
+- Sanctum Token Authentication
+
+---
+
+## User Module
+
+Completed APIs
+
+- User List
+- User Details
+- Create User
+- Update User
+- Activate User
+- Deactivate User
+- Soft Delete User
+- Restore User
+
+Supports
+
+- Pagination
+- Searching
+- Sorting
+- Filtering
+- UUID
+- Soft Delete
+
+---
+
+## Role Module
+
+Completed APIs
+
+- Role List
+- Role Details
+- Create Role
+- Update Role
+- Delete Role
+- Get Role Permissions
+- Assign Permissions
+
+---
+
+## Permission Module
+
+Completed APIs
+
+- Permission List
+- Permission Details
+
+Permission CRUD is intentionally disabled because permissions are developer-managed.
+
+---
+
+# Authorization
+
+Integrated
+
+- Laravel Sanctum
+- Spatie Permission
+
+Supported
+
+- Roles
+- Permissions
+- Middleware Protection
+
+Example
+
+```
+permission:user.view
+
+permission:user.create
+
+permission:user.update
+
+permission:user.delete
+```
+
+---
+
+# API Response Format
+
+Success
+
+```json
+{
+    "success": true,
+    "message": "Success",
+    "data": {}
+}
+```
+
+Validation Error
+
+```json
+{
+    "success": false,
+    "message": "Validation Error",
+    "errors": {}
+}
+```
+
+Server Error
+
+```json
+{
+    "success": false,
+    "message": "Internal Server Error"
+}
+```
+
+---
+
+# Folder Structure Example
+
+```
+User
+
+Actions
+Controllers
+Models
+Repositories
+Requests
+Resources
+Routes
+Services
+```
+
+---
+
+# Design Patterns
+
+Implemented
+
+- Repository Pattern
+- Service Layer
+- Action Pattern
+- Resource Pattern
+- Request Validation
+- Dependency Injection
+
+---
+
+# Authentication Flow
+
+```
+Register
+
+↓
+
+Login
+
+↓
+
+Sanctum Token
+
+↓
+
+Bearer Token
+
+↓
+
+Protected APIs
+```
+
+---
+
+# Role Permission Flow
+
+```
+Permission Seeder
+
+↓
+
+Role Seeder
+
+↓
+
+Assign Permission
+
+↓
+
+User Role
+
+↓
+
+Middleware
+
+↓
+
+Protected API
+```
+
+---
+
+# Validation
+
+Using Laravel Form Requests
+
+Example
+
+- CreateUserRequest
+- UpdateUserRequest
+- LoginRequest
+- RegisterRequest
+
+---
+
+# UUID
+
+UUID is used as the public identifier for APIs.
+
+Example
+
+```
+GET /users/{uuid}
+```
+
+instead of
+
+```
+GET /users/{id}
+```
+
+---
+
+# Database Features
+
+- UUID
+- Soft Deletes
+- Timestamps
+- Indexes
+
+---
+
+# Security
+
+- Password Hashing
+- Sanctum Authentication
+- Authorization Middleware
+- Validation
+- Hidden Attributes
+- Mass Assignment Protection
+
+---
+
+# Current Modules
+
+✅ Auth
+
+✅ User
+
+✅ Role
+
+✅ Permission
+
+---
+
+# Next Planned Modules
+
+- Category
+- Brand
+- Product
+- Media
+- Inventory
+- Customer
+- Supplier
+- Purchase
+- Sales
+- Orders
+- Dashboard
+- Settings
+- Notifications
+- Activity Logs
+
+---
+
+# Coding Standards
+
+- PSR-12
+- Strict Types
+- Constructor Dependency Injection
+- Thin Controllers
+- Business Logic inside Services
+- Database Logic inside Repositories
+- Single Responsibility Principle
+
+---
+
+# API Testing
+
+Recommended Tool
+
+- Postman
+
+Authentication
+
+```
+Authorization
+
+Bearer {token}
+```
+
+Header
+
+```
+Accept: application/json
+```
+
+---
+
+# Future Enhancements
+
+- DTO Layer
+- Policies
+- Events & Listeners
+- Queue Jobs
+- API Versioning
+- Swagger/OpenAPI
+- Docker Support
+- CI/CD
+- Unit Testing
+- Feature Testing
+- Audit Logs
+- Multi Tenancy
+
+---
+
+# Project Status
+
+Current Version
+
+```
+v1.0.0 (Foundation Completed)
+```
+
+Completed
+
+- Authentication
+- Authorization
+- User Management
+- Role Management
+- Permission Management
+
+The project is now ready for business module development.
