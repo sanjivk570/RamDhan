@@ -2,12 +2,20 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * User model.
+ *
+ * Represents an authenticated user within the application and
+ * provides authentication, notifications, and model factory support.
+ *
+ * @package App\Models
+ * @author Sanjiv Kumar Kushwaha
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -25,7 +33,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * The attributes that should be hidden during serialization.
      *
      * @var list<string>
      */
@@ -35,7 +43,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Get the model's attribute casting definitions.
      *
      * @return array<string, string>
      */

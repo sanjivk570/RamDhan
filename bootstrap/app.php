@@ -3,13 +3,16 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 //use Throwable;
+use App\Core\Responses\ApiResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,7 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
@@ -77,13 +84,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Resource not found.',
-                'data' => null,
-                'errors' => null,
-                'meta' => null,
-            ], 404);
+            return ApiResponse::notFound();
 
         });
 
@@ -93,13 +94,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Route not found.',
-                'data' => null,
-                'errors' => null,
-                'meta' => null,
-            ], 404);
+            if ($e->getPrevious() instanceof ModelNotFoundException) {
+                return ApiResponse::notFound();
+            }
+
+            return ApiResponse::error('Route not found.', null, 404);
 
         });
 
@@ -109,15 +108,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return response()->json([
-                'success' => false,
-                'message' => config('app.debug')
-                    ? $e->getMessage()
-                    : 'Something went wrong.',
-                'data' => null,
-                'errors' => null,
-                'meta' => null,
-            ], 500);
+            return ApiResponse::error(
+                config('app.debug') ? $e->getMessage() : 'Something went wrong.',
+                null,
+                500
+            );
 
         });
 

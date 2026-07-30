@@ -1,25 +1,27 @@
 <?php
 
-namespace App\Modules\User\Providers;
+namespace App\Modules\Role\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
 /**
- * Register and bootstrap the User module services.
+ * Register and bootstrap the Role module services.
  *
- * This service provider is responsible for loading the module's
- * routes and database migrations during application startup.
+ * This service provider is responsible for loading the
+ * Role module's routes and database migrations during
+ * application startup.
  *
- * @package App\Modules\User\Providers
+ * @package App\Modules\Role\Providers
  * @author Sanjiv Kumar Kushwaha
  */
-class UserServiceProvider extends ServiceProvider
+class RoleServiceProvider extends ServiceProvider
 {
+
     /**
-     * Register the User module services.
+     * Register the Role module services.
      *
-     * Bind any service container dependencies or module-specific
-     * services here.
+     * Bind any module-specific services or dependencies
+     * into the service container.
      *
      * @return void
      */
@@ -29,7 +31,7 @@ class UserServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap the User module services.
+     * Bootstrap the Role module services.
      *
      * Loads the module's API routes and database migrations.
      *
