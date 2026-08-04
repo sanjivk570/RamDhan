@@ -48,8 +48,14 @@ class PermissionController extends Controller
             $request->validated()
         );
 
-        return ApiResponse::success(
-            PermissionResource::collection($permissions)
+        // return ApiResponse::success(
+        //     PermissionResource::collection($permissions)
+        // );
+
+        return ApiResponse::paginated(
+            $permissions,
+            PermissionResource::collection($permissions),
+            'Permissions fetched successfully.'
         );
     }
 

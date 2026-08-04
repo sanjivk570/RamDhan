@@ -54,11 +54,18 @@ class UserController extends Controller
      */
     public function index(UserListRequest $request)
     {
+        /** @var \Illuminate\Contracts\Pagination\LengthAwarePaginator $users */
         $users = $this->listUserAction->execute(
             $request->validated()
         );
 
-        return ApiResponse::success(
+        // return ApiResponse::success(
+        //     UserResource::collection($users),
+        //     'Users fetched successfully.'
+        // );
+
+        return ApiResponse::paginated(
+            $users,
             UserResource::collection($users),
             'Users fetched successfully.'
         );

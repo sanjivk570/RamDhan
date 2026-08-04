@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\User\Requests;
 
 use App\Core\Requests\BaseRequest;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Validate the request for listing users.
@@ -18,6 +19,15 @@ use App\Core\Requests\BaseRequest;
  */
 class UserListRequest extends BaseRequest
 {
+    private const SORTABLE_COLUMNS = [
+        'first_name',
+        'last_name',
+        'email',
+        'mobile',
+        'created_at',
+        'updated_at',
+    ];
+
     /**
      * Get the validation rules for the request.
      *
@@ -30,16 +40,52 @@ class UserListRequest extends BaseRequest
     {
         return [
             'search' => ['nullable', 'string'],
-            'status' => ['nullable', 'boolean'],
+            //'status' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:10', 'max:100'],
             'sort_by' => [
                 'nullable',
-                'in:first_name,email,created_at'
+                //'in:first_name,email,created_at',
+                'in:' . implode(',', self::SORTABLE_COLUMNS),
             ],
             'sort_order' => [
                 'nullable',
                 'in:asc,desc'
             ],
+
+            'filters' => [
+                'nullable',
+                'array',
+            ],
+
+            'filters.first_name' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'filters.last_name' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'filters.email' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'filters.mobile' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
+
+            'filters.status' => [
+                'nullable',
+                'boolean',
+            ],
+
         ];
     }
 }

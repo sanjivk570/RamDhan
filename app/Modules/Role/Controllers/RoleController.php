@@ -67,8 +67,10 @@ class RoleController extends Controller
             $request->validated()
         );
 
-        return ApiResponse::success(
-            RoleResource::collection($roles)
+        return ApiResponse::paginated(
+            $roles,
+            RoleResource::collection($roles),
+            'Roles fetched successfully.'
         );
     }
 

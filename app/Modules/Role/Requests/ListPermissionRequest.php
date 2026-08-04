@@ -22,6 +22,21 @@ class ListPermissionRequest extends BaseRequest
      *
      * @return array<string, mixed>
      */
+    private const SORTABLE_COLUMNS = [
+        'name',
+        'guard_name',
+        'display_name',
+        'description',
+        'is_system',
+        'created_at',
+        'updated_at',
+    ];
+
+    /**
+     * Get the validation rules for the request.
+     *
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -37,12 +52,47 @@ class ListPermissionRequest extends BaseRequest
 
             'sort_by' => [
                 'nullable',
-                'in:name,created_at',
+                'in:' . implode(',', self::SORTABLE_COLUMNS),
             ],
 
             'sort_order' => [
                 'nullable',
                 'in:asc,desc',
+            ],
+
+            'filters' => [
+                'nullable',
+                'array',
+            ],
+
+            'filters.name' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'filters.guard_name' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'filters.display_name' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'filters.module' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'filters.description' => [
+                'nullable',
+                'string',
+                'max:255',
             ],
 
         ];

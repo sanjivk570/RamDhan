@@ -34,7 +34,78 @@ class PermissionRepository
                 $filters['search'] ?? null,
                 fn ($query, $search) =>
                     $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('guard_name', 'like', "%{$search}%")
+                        ->orWhere('display_name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('module', 'like', "%{$search}%")
+
             )
+
+            // Column Filters
+            ->when(
+                !empty($filters['filters']['name']),
+                function ($query) use ($filters) {
+                    $query->where(
+                        'name',
+                        'LIKE',
+                        '%' . $filters['filters']['name'] . '%'
+                    );
+
+                }
+            )
+
+            ->when(
+                !empty($filters['filters']['guard_name']),
+                function ($query) use ($filters) {
+
+                    $query->where(
+                        'guard_name',
+                        'LIKE',
+                        '%' . $filters['filters']['guard_name'] . '%'
+                    );
+
+                }
+            )
+
+            ->when(
+                !empty($filters['filters']['display_name']),
+                function ($query) use ($filters) {
+
+                    $query->where(
+                        'display_name',
+                        'LIKE',
+                        '%' . $filters['filters']['display_name'] . '%'
+                    );
+
+                }
+            )
+
+            ->when(
+                !empty($filters['filters']['description']),
+                function ($query) use ($filters) {
+
+                    $query->where(
+                        'description',
+                        'LIKE',
+                        '%' . $filters['filters']['description'] . '%'
+                    );
+
+                }
+            )
+
+            ->when(
+                !empty($filters['filters']['module']),
+                function ($query) use ($filters) {
+
+                    $query->where(
+                        'module',
+                        'LIKE',
+                        '%' . $filters['filters']['module'] . '%'
+                    );
+
+                }
+            )
+
 
             ->orderBy(
                 $filters['sort_by'] ?? 'name',

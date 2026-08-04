@@ -43,13 +43,79 @@ class UserRepository
                 }
             )
 
+            // ->when(
+            //     isset($filters['status']),
+            //     function ($query) use ($filters) {
+            //         $query->where(
+            //             'is_active',
+            //             $filters['status']
+            //         );
+            //     }
+            // )
+
+            // Column Filters
             ->when(
-                isset($filters['status']),
+                !empty($filters['filters']['first_name']),
                 function ($query) use ($filters) {
+
+                    $query->where(
+                        'first_name',
+                        'LIKE',
+                        '%' . $filters['filters']['first_name'] . '%'
+                    );
+
+                }
+            )
+
+            ->when(
+                !empty($filters['filters']['last_name']),
+                function ($query) use ($filters) {
+
+                    $query->where(
+                        'last_name',
+                        'LIKE',
+                        '%' . $filters['filters']['last_name'] . '%'
+                    );
+
+                }
+            )
+
+            ->when(
+                !empty($filters['filters']['email']),
+                function ($query) use ($filters) {
+
+                    $query->where(
+                        'email',
+                        'LIKE',
+                        '%' . $filters['filters']['email'] . '%'
+                    );
+
+                }
+            )
+
+            ->when(
+                !empty($filters['filters']['mobile']),
+                function ($query) use ($filters) {
+
+                    $query->where(
+                        'mobile',
+                        'LIKE',
+                        '%' . $filters['filters']['mobile'] . '%'
+                    );
+
+                }
+            )
+
+            ->when(
+                isset($filters['filters']['status']) &&
+                $filters['filters']['status'] !== '',
+                function ($query) use ($filters) {
+
                     $query->where(
                         'is_active',
-                        $filters['status']
+                        (bool) $filters['filters']['status']
                     );
+
                 }
             )
 
