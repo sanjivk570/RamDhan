@@ -23,6 +23,7 @@ class ListRoleRequest extends BaseRequest
      * @return array<string, mixed>
      */
     private const SORTABLE_COLUMNS = [
+        'id',
         'name',
         'guard_name',
         'display_name',
