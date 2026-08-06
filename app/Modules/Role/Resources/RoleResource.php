@@ -32,6 +32,16 @@ class RoleResource extends JsonResource
             'description' => $this->description,
             'guard_name' => $this->guard_name,
             'is_system' => $this->is_system,
+            'permissions' => $this->whenLoaded('permissions', function () {
+                return $this->permissions->map(function ($permission) {
+                    return [
+                        'id' => $permission->id,
+                        'name' => $permission->name,
+                        'display_name' => $permission->display_name,
+                        'module' => $permission->module,
+                    ];
+                });
+            }),
             'created_at' => $this->created_at,
         ];
     }

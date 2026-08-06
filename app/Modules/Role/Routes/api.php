@@ -36,22 +36,22 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [RoleController::class, 'index'])
             ->middleware('permission:role.view');
 
-        Route::get('/{uuid}', [RoleController::class, 'show'])
+        Route::get('/{id}', [RoleController::class, 'show'])
             ->middleware('permission:role.view');
 
         Route::post('/', [RoleController::class, 'store'])
             ->middleware('permission:role.create');
 
-        Route::put('/{uuid}', [RoleController::class, 'update'])
+        Route::put('/{id}', [RoleController::class, 'update'])
             ->middleware('permission:role.update');
 
-        Route::delete('/{uuid}', [RoleController::class, 'destroy'])
+        Route::delete('/{id}', [RoleController::class, 'destroy'])
             ->middleware('permission:role.delete');
 
-        Route::get('/{uuid}/permissions', [RoleController::class, 'permissions'])
+        Route::get('/{id}/permissions', [RoleController::class, 'permissions'])
             ->middleware('permission:role.view');
 
-        Route::put('/{uuid}/permissions', [RoleController::class, 'syncPermissions'])
+        Route::put('/{id}/permissions', [RoleController::class, 'syncPermissions'])
             ->middleware('permission:role.update');
 
     });

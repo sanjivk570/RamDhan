@@ -25,16 +25,14 @@ class UpdateRoleRequest extends BaseRequest
      */
     public function rules(): array
     {
-        $uuid = $this->route('uuid');
+        $id = $this->route('id');
 
         return [
 
             'name' => [
-
                 'sometimes',
-
-                Rule::unique('roles', 'name')
-                    ->ignore($uuid, 'uuid'),
+                'string',
+                Rule::unique('roles', 'name')->ignore($id),
             ],
 
             'display_name' => [

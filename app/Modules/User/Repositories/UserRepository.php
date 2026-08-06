@@ -27,7 +27,7 @@ class UserRepository
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
-        return User::query()
+        return User::query()->with('roles')
 
             ->when(
                 $filters['search'] ?? null,
@@ -195,7 +195,7 @@ class UserRepository
      */
     public function findByUuidOrFail(string $uuid): User
     {
-        return User::where('uuid', $uuid)->firstOrFail();
+        return User::with('roles')->where('uuid', $uuid)->firstOrFail();
     }
 
     /**

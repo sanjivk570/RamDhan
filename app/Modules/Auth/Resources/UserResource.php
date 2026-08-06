@@ -23,6 +23,9 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Retrieve the first role assigned to the user, if any.
+        $role = $this->roles->first();
+
         return [
             'uuid'       => $this->uuid,
             'first_name' => $this->first_name,
@@ -30,6 +33,12 @@ class UserResource extends JsonResource
             'full_name'  => $this->full_name,
             'email'      => $this->email,
             'mobile'     => $this->mobile,
+            'is_active'  => $this->is_active,
+            'role' => $role ? [
+                'id' => $role->id,
+                'name' => $role->name,
+                'display_name' => $role->display_name,
+            ] : null,
         ];
     }
 }

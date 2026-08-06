@@ -28,7 +28,7 @@ class RoleRepository
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
-        return Role::query()
+        return Role::query()->with('permissions')
 
             ->when(
                 $filters['search'] ?? null,
@@ -123,7 +123,7 @@ class RoleRepository
      */
     public function findByUuidOrFail(int $id): Role
     {
-        return Role::where('id', $id)->firstOrFail();
+        return Role::with('permissions')->where('id', $id)->firstOrFail();
     }
 
     /**

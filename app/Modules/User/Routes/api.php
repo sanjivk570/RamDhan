@@ -32,6 +32,11 @@ Route::prefix('api/v1')->group(function () {
 
     Route::middleware([
         'auth:sanctum',
+        'permission:user.view'
+    ])->get('/users/{uuid}', [UserController::class, 'show']);
+
+    Route::middleware([
+        'auth:sanctum',
         'permission:user.create'
     ])->post('/users', [UserController::class, 'store']);
 
@@ -44,6 +49,11 @@ Route::prefix('api/v1')->group(function () {
         'auth:sanctum',
         'permission:user.delete'
     ])->delete('/users/{uuid}', [UserController::class, 'destroy']);
+
+    Route::middleware([
+        'auth:sanctum',
+        'permission:user.update'
+    ])->patch('/users/{uuid}/status', [UserController::class, 'changeStatus']);
 
 });
 
