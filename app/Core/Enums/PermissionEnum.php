@@ -30,4 +30,9 @@ enum PermissionEnum: string
     case USER_CREATE = 'user.create';
     case USER_UPDATE = 'user.update';
     case USER_DELETE = 'user.delete';
+
+    /**
+     * Dashoboard permissions.
+     */
+    case DASHBOARD_VIEW = 'dashboard.view';
 }

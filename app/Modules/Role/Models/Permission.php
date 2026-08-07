@@ -25,7 +25,7 @@ class Permission extends SpatiePermission
      * @var array<int, string>
      */
     protected $fillable = [
-        'uuid',
+        'id',
         'name',
         'display_name',
         'module',
