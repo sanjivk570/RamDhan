@@ -35,4 +35,13 @@ enum PermissionEnum: string
      * Dashoboard permissions.
      */
     case DASHBOARD_VIEW = 'dashboard.view';
+
+    /**
+     * Category permissions.
+     */
+    case CATEGORY_VIEW = 'category.view';
+    case CATEGORY_CREATE = 'category.create';
+    case CATEGORY_UPDATE = 'category.update';
+    case CATEGORY_DELETE = 'category.delete';
+    case CATEGORY_RESTORE = 'category.restore';
 }
