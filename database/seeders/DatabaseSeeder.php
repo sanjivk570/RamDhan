@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             \App\Modules\Role\Seeders\RolePermissionSeeder::class,
             \App\Modules\User\Seeders\SuperAdminSeeder::class,
             \App\Modules\Category\Seeders\CategorySeeder::class,
+            \App\Modules\Product\Seeders\ProductSeeder::class,
         ]);
     }
 }

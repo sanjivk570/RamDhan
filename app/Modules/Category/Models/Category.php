@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Modules\Product\Models\Product;
 
 class Category extends Model
 {
@@ -56,6 +57,17 @@ class Category extends Model
         return $this->hasMany(
             Category::class,
             'parent_id'
+        );
+    }
+
+    /**
+     * Category belongs to many products.
+     */
+    public function products()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'product_categories'
         );
     }
 }

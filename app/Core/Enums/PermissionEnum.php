@@ -44,4 +44,13 @@ enum PermissionEnum: string
     case CATEGORY_UPDATE = 'category.update';
     case CATEGORY_DELETE = 'category.delete';
     case CATEGORY_RESTORE = 'category.restore';
+
+    /**
+     * product permissions.
+     */
+    case PRODUCT_VIEW = 'product.view';
+    case PRODUCT_CREATE = 'product.create';
+    case PRODUCT_UPDATE = 'product.update';
+    case PRODUCT_DELETE = 'product.delete';
+    case PRODUCT_RESTORE = 'product.restore';
 }
