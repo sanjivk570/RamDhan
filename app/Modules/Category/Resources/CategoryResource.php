@@ -6,6 +6,7 @@ namespace App\Modules\Category\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Modules\Media\Resources\MediaResource;
 
 class CategoryResource extends JsonResource
 {
@@ -24,7 +25,11 @@ class CategoryResource extends JsonResource
 
             'description' => $this->description,
 
-            'image' => $this->image,
+            //'image' => $this->image,
+
+            'images' => MediaResource::collection(
+                $this->whenLoaded('media')
+            ),
 
             'is_active' => $this->is_active,
 

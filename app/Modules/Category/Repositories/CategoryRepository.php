@@ -12,7 +12,7 @@ class CategoryRepository
     ): LengthAwarePaginator {
 
         $query = Category::query()
-            ->with('parent');
+            ->with('parent', 'media');
 
         if (!empty($filters['search'])) {
 
@@ -174,6 +174,7 @@ class CategoryRepository
             ->with([
                 'parent',
                 'children',
+                'media',
             ])
             ->where('uuid', $uuid)
             ->first();
@@ -221,6 +222,7 @@ class CategoryRepository
             ->with([
                 'parent',
                 'children',
+                'media',
             ])
             ->where('uuid', $uuid)
             ->first();

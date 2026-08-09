@@ -73,11 +73,16 @@ class Category extends Model
         );
     }
 
+    // public function media(): MorphMany
+    // {
+    //     return $this->morphMany(
+    //         Media::class,
+    //         'mediable'
+    //     );
+    // }
+
     public function media(): MorphMany
     {
-        return $this->morphMany(
-            Media::class,
-            'mediable'
-        );
+        return $this->morphMany(Media::class, 'mediable')->where('collection', 'category');
     }
 }
