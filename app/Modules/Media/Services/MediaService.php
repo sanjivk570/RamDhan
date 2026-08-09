@@ -310,4 +310,47 @@ class MediaService
         return $this->mediaRepository
             ->setPrimary($media);
     }
+
+    public function deleteByMediable(
+        string $mediableType,
+        int $mediableId
+    ): void {
+        $this->mediaRepository->deleteByMediable(
+            $mediableType,
+            $mediableId
+        );
+    }
+
+    public function restoreByMediable(
+        string $mediableType,
+        int $mediableId
+    ): void {
+        $this->mediaRepository->restoreByMediable(
+            $mediableType,
+            $mediableId
+        );
+    }
+
+    /**
+     * Permanently delete all media belonging to an owner.
+     *
+     * Physical files are deleted by the existing
+     * individual forceDelete() method.
+     */
+    public function forceDeleteByMediable(
+        string $mediableType,
+        int $mediableId
+    ): void {
+        $mediaItems = $this->mediaRepository
+            ->getAllByMediable(
+                $mediableType,
+                $mediableId
+            );
+
+        foreach ($mediaItems as $media) {
+            $this->forceDelete(
+                $media->uuid
+            );
+        }
+    }
 }

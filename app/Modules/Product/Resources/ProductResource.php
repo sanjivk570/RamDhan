@@ -6,6 +6,7 @@ namespace App\Modules\Product\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Modules\Media\Resources\MediaResource;
 
 /**
  * Product API resource.
@@ -41,9 +42,19 @@ class ProductResource extends JsonResource
                 $this->whenLoaded(
                     'categories'
                 ),
-            'images' => ProductImageResource::collection(
+            // 'images' => ProductImageResource::collection(
+            //     $this->whenLoaded('images')
+            // ),
+
+            /*
+             * Product media.
+             *
+             * Only loaded when explicitly eager loaded.
+             */
+            'images' => MediaResource::collection(
                 $this->whenLoaded('images')
             ),
+
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

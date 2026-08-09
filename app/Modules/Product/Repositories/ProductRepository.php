@@ -27,7 +27,14 @@ class ProductRepository
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
-        return Product::query()->with(['categories', 'images'])
+        return Product::query()
+        //->with(['categories', 'images'])
+        ->with([
+            'categories',
+            'images' => function ($query) {
+                $query->orderBy('sort_order');
+            },
+        ])
 
             /*
              * Global Search
@@ -119,7 +126,13 @@ class ProductRepository
      */
     public function findByUuid(string $uuid): ?Product
     {
-        return Product::with(['categories', 'images'])->where('uuid', $uuid)->first();
+        // return Product::with(['categories', 'images'])->where('uuid', $uuid)->first();
+
+        return Product::with(
+            ['categories', 'images' => 
+            function ($query) {
+                $query->orderBy('sort_order'); },
+            ])->where('uuid', $uuid)->first();
     }
 
     /**
@@ -130,7 +143,12 @@ class ProductRepository
      */
     public function findByUuidOrFail(string $uuid): Product
     {
-        return Product::with(['categories', 'images'])->where('uuid', $uuid)->firstOrFail();
+        // return Product::with(['categories', 'images'])->where('uuid', $uuid)->firstOrFail();
+
+        return Product::with(['categories', 'images' => 
+            function ($query) {
+                $query->orderBy('sort_order'); },
+            ])->where('uuid', $uuid)->firstOrFail();
     }
 
     /**
@@ -228,5 +246,18 @@ class ProductRepository
     public function deleteImages(Product $product): void 
     {
         $product->images()->delete();
+    }
+
+    public function findWithTrashedByUuidOrFail(string $uuid): Product 
+    {
+        return Product::withTrashed()->where('uuid', $uuid)->firstOrFail();
+    }
+
+    /**
+     * Permanently delete a product.
+     */
+    public function forceDelete(Product $product): bool
+    {
+        return (bool) $product->forceDelete();
     }
 }

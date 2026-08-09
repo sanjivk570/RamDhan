@@ -231,4 +231,42 @@ class MediaRepository
 
         return $media->refresh();
     }
+
+    /**
+     * Soft delete all media belonging to an owner.
+     */
+    public function deleteByMediable(string $mediableType, int $mediableId): void {
+        Media::query()->where('mediable_type', $mediableType)
+            ->where('mediable_id', $mediableId)
+            ->delete();
+    }
+
+    /**
+     * Restore all soft-deleted media belonging to an owner.
+     */
+    public function restoreByMediable(string $mediableType, int $mediableId): void 
+    {
+        Media::withTrashed()->where('mediable_type', $mediableType)
+            ->where('mediable_id', $mediableId)
+            ->restore();
+    }
+
+    /**
+     * Get all media belonging to an owner,
+     * including soft-deleted media.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Media>
+     */
+    public function getAllByMediable(string $mediableType, int $mediableId) {
+        return Media::withTrashed()
+            ->where(
+                'mediable_type',
+                $mediableType
+            )
+            ->where(
+                'mediable_id',
+                $mediableId
+            )
+            ->get();
+    }
 }

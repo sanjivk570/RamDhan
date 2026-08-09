@@ -27,14 +27,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::delete('/{uuid}', [ProductController::class, 'destroy'])->middleware('permission:product.delete');
 
             Route::post('/{uuid}/restore',[ProductController::class, 'restore'])->middleware('permission:product.restore');
+
+            Route::delete('/{uuid}/force', [ProductController::class, 'forceDelete'])->middleware('permission:product.delete');
+
         });
 
-        Route::prefix('products/{uuid}/images')->group(function () {
-            Route::post('/', [ProductImageController::class, 'store']);
-            //Route::delete('/{imageUuid}', [ProductImageController::class, 'destroy']);
-            Route::delete('/{imageUuid}', [ProductImageController::class, 'forceDestroy']);
-            Route::patch('/{imageUuid}/primary',[ProductImageController::class, 'setPrimary']);
-        });
+        // Route::prefix('products/{uuid}/images')->group(function () {
+        //     Route::post('/', [ProductImageController::class, 'store']);
+        //     //Route::delete('/{imageUuid}', [ProductImageController::class, 'destroy']);
+        //     Route::delete('/{imageUuid}', [ProductImageController::class, 'forceDestroy']);
+        //     Route::patch('/{imageUuid}/primary',[ProductImageController::class, 'setPrimary']);
+        // });
 
     });
 });

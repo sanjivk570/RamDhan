@@ -97,13 +97,21 @@ class Product extends Model
      *
      * @return HasMany
      */
-    public function images(): HasMany
+    // public function images(): HasMany
+    // {
+    //     return $this->hasMany(ProductImage::class, 'product_id', 'id')->orderBy('sort_order');
+    // }
+
+    public function images(): MorphMany
     {
-        return $this->hasMany(ProductImage::class, 'product_id', 'id')->orderBy('sort_order');
+        return $this->morphMany(Media::class, 'mediable')
+        ->where('collection', 'product')
+        ->where('type', 'image')
+        ->orderBy('sort_order');
     }
     
     public function media(): MorphMany
     {
-        return $this->morphMany(Media::class, 'mediable');
+        return $this->morphMany(Media::class, 'mediable')->where('collection', 'product');
     }
 }

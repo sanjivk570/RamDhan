@@ -7,6 +7,9 @@ namespace App\Modules\Product\Services;
 use App\Modules\Product\Models\Product;
 use App\Modules\Product\Repositories\ProductRepository;
 use App\Modules\Category\Models\Category;
+use App\Modules\Media\Services\MediaService;
+use RuntimeException;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Service responsible for product business operations.
@@ -27,7 +30,8 @@ class ProductService
      * @param ProductRepository $productRepository
      */
     public function __construct(
-        private readonly ProductRepository $productRepository
+        private readonly ProductRepository $productRepository,
+        private readonly MediaService $mediaService
     ) {
     }
 
@@ -139,8 +143,13 @@ class ProductService
     public function delete(string $uuid): void
     {
         $product = $this->productRepository->findByUuidOrFail($uuid);
+        //$this->productRepository->delete($product);
 
-        $this->productRepository->delete($product);
+        // DB::transaction(function () use ($product) {
+            $this->productRepository->delete($product);
+
+            $this->mediaService->deleteByMediable($product->getMorphClass(), $product->id);
+        //});
     }
 
     /**
@@ -151,6 +160,57 @@ class ProductService
      */
     public function restore(string $uuid): Product
     {
-        return $this->productRepository->restore($uuid);
+        $product = $this->productRepository->findWithTrashedByUuidOrFail($uuid);
+
+        if (!$product->trashed()) {
+            throw new RuntimeException(
+                'Product is already active.'
+            );
+        }
+
+        $this->productRepository->restore($product->uuid);
+        $this->mediaService->restoreByMediable($product->getMorphClass(), $product->id);
+
+        return $product->refresh();
     }
+
+    /**
+     * Permanently delete a product and all related media.
+     *
+     * @param string $uuid
+     * @return void
+     */
+    public function forceDelete(string $uuid): void
+    {
+        $product = $this->productRepository
+            ->findWithTrashedByUuidOrFail($uuid);
+
+        if (!$product->trashed()) {
+            throw new RuntimeException(
+                'Product must be deleted before permanent deletion.'
+            );
+        }
+
+        DB::transaction(function () use ($product) {
+
+            /*
+            * Permanently delete all product media.
+            *
+            * MediaService is responsible for deleting
+            * both database records and physical files.
+            */
+            $this->mediaService
+                ->forceDeleteByMediable(
+                    $product->getMorphClass(),
+                    $product->id
+                );
+
+            /*
+            * Permanently delete the product.
+            */
+            $this->productRepository
+                ->forceDelete($product);
+        });
+    }
+
 }

@@ -18,6 +18,7 @@ use App\Modules\Product\Requests\CreateProductRequest;
 use App\Modules\Product\Requests\ProductListRequest;
 use App\Modules\Product\Requests\UpdateProductRequest;
 use App\Modules\Product\Resources\ProductResource;
+use App\Modules\Product\Actions\ForceDeleteProductAction;
 
 /**
  * Controller responsible for product management operations.
@@ -49,7 +50,8 @@ class ProductController extends Controller
         private readonly UpdateProductAction $updateProductAction,
         private readonly DeleteProductAction $deleteProductAction,
         private readonly RestoreProductAction $restoreProductAction,
-        private readonly ChangeStatusAction $changeStatusAction
+        private readonly ChangeStatusAction $changeStatusAction,
+        private readonly ForceDeleteProductAction $forceDeleteProductAction
     ) {
     }
 
@@ -162,6 +164,20 @@ class ProductController extends Controller
         return ApiResponse::success(
             new ProductResource($product),
             'Product restored successfully.'
+        );
+    }
+
+    /**
+     * DELETE /products/{uuid}/force
+     */
+    public function forceDelete(string $uuid)
+    {
+        $this->forceDeleteProductAction
+            ->execute($uuid);
+
+        return ApiResponse::success(
+            [],
+            'Product permanently deleted successfully.'
         );
     }
 
