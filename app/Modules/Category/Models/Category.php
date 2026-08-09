@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use App\Modules\Product\Models\Product;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Modules\Media\Models\Media;
 
 class Category extends Model
 {
@@ -68,6 +70,14 @@ class Category extends Model
         return $this->belongsToMany(
             Product::class,
             'product_categories'
+        );
+    }
+
+    public function media(): MorphMany
+    {
+        return $this->morphMany(
+            Media::class,
+            'mediable'
         );
     }
 }
