@@ -48,7 +48,7 @@ Route::prefix('api/v1')->group(function () {
        Route::delete('/{uuid}', [TaxRateController::class, 'destroy']);
 
        Route::post('/{uuid}/restore',[TaxRateController::class, 'restore']
-       
+
        );
    });
 
