@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Modules\Media\Models\Media;
+use App\Modules\ProductVariant\Models\ProductVariant;
 
 /**
  * Product model.
@@ -113,5 +114,13 @@ class Product extends Model
     public function media(): MorphMany
     {
         return $this->morphMany(Media::class, 'mediable')->where('collection', 'product');
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(
+            ProductVariant::class,
+            'product_id'
+        );
     }
 }
