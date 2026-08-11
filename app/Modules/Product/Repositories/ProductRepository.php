@@ -30,8 +30,7 @@ class ProductRepository
         return Product::query()
         //->with(['categories', 'images'])
         ->with([
-            'categories',
-            'images' => function ($query) {
+            'categories', 'images', 'unit', 'taxClass', 'inventoryStock', 'variants' => function ($query) {
                 $query->orderBy('sort_order');
             },
         ])
@@ -129,7 +128,7 @@ class ProductRepository
         // return Product::with(['categories', 'images'])->where('uuid', $uuid)->first();
 
         return Product::with(
-            ['categories', 'images' => 
+            ['categories', 'images', 'unit', 'taxClass', 'inventoryStock', 'variants' => 
             function ($query) {
                 $query->orderBy('sort_order'); },
             ])->where('uuid', $uuid)->first();
@@ -145,7 +144,7 @@ class ProductRepository
     {
         // return Product::with(['categories', 'images'])->where('uuid', $uuid)->firstOrFail();
 
-        return Product::with(['categories', 'images' => 
+        return Product::with(['categories', 'images', 'unit', 'taxClass', 'inventoryStock', 'variants' => 
             function ($query) {
                 $query->orderBy('sort_order'); },
             ])->where('uuid', $uuid)->firstOrFail();

@@ -52,6 +52,10 @@ class UpdateProductRequest extends FormRequest
                 Rule::unique("products", "sku")->ignore($uuid, "uuid"),
             ],
 
+            "unit_id" => ["nullable", "numeric"],
+
+            "tax_class_id" => ["nullable", "numeric"],
+
             "description" => ["nullable", "string"],
 
             "short_description" => ["nullable", "string", "max:500"],
@@ -60,7 +64,7 @@ class UpdateProductRequest extends FormRequest
 
             "compare_price" => ["nullable", "numeric", "min:0"],
 
-            // 'cost_price' => ['nullable', 'numeric', 'min:0'],
+            'cost_price' => ['nullable', 'numeric', 'min:0'],
 
             "stock_quantity" => ["required", "integer", "min:0"],
 

@@ -13,6 +13,11 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Modules\Media\Models\Media;
 use App\Modules\ProductVariant\Models\ProductVariant;
+use App\Modules\Unit\Models\Unit;
+use App\Modules\Tax\Models\TaxClass;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Modules\Inventory\Models\InventoryStock;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Product model.
@@ -42,12 +47,14 @@ class Product extends Model
         'uuid',
         'name',
         'slug',
+        'unit_id',
+        'tax_class_id',
         'sku',
         'description',
         'short_description',
         'price',
         'compare_price',
-        //'cost_price',
+        'cost_price',
         'stock_quantity',
         'is_active',
         'is_featured',
@@ -62,7 +69,7 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'compare_price' => 'decimal:2',
-        //'cost_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
         'stock_quantity' => 'integer',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
@@ -122,5 +129,23 @@ class Product extends Model
             ProductVariant::class,
             'product_id'
         );
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function taxClass(): BelongsTo
+    {
+        return $this->belongsTo(TaxClass::class);
+    }
+
+    /**
+     * Product inventory stock.
+     */
+    public function inventoryStock(): HasOne
+    {
+        return $this->hasOne(InventoryStock::class, 'product_id');
     }
 }

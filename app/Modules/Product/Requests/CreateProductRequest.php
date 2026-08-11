@@ -39,6 +39,10 @@ class CreateProductRequest extends FormRequest
 
             "sku" => ["required", "string", "max:100", "unique:products,sku"],
 
+            "unit_id" => ["nullable", "numeric"],
+
+            "tax_class_id" => ["nullable", "numeric"],
+
             "description" => ["nullable", "string"],
 
             "short_description" => ["nullable", "string", "max:500"],
@@ -47,7 +51,7 @@ class CreateProductRequest extends FormRequest
 
             "compare_price" => ["nullable", "numeric", "min:0"],
 
-            // 'cost_price' => ['nullable', 'numeric', 'min:0'],
+            'cost_price' => ['nullable', 'numeric', 'min:0'],
 
             "stock_quantity" => ["required", "integer", "min:0"],
 
