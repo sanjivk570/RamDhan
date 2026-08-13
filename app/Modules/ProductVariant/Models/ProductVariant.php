@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Modules\Inventory\Models\InventoryStock;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ProductVariant extends Model
 {
@@ -29,8 +31,6 @@ class ProductVariant extends Model
         "price",
         "compare_price",
         "cost_price",
-        "stock_quantity",
-        "low_stock_threshold",
         "is_default",
         "is_active",
         "sort_order",
@@ -40,8 +40,6 @@ class ProductVariant extends Model
         "price" => "decimal:2",
         "compare_price" => "decimal:2",
         "cost_price" => "decimal:2",
-        "stock_quantity" => "integer",
-        "low_stock_threshold" => "integer",
         "is_default" => "boolean",
         "is_active" => "boolean",
         "sort_order" => "integer",
@@ -90,4 +88,13 @@ class ProductVariant extends Model
     {
         return $query->where("is_default", true);
     }
+
+    /**
+     * Product inventory stock.
+     */
+    public function inventoryStock(): HasOne
+    {
+        return $this->hasOne(InventoryStock::class, 'product_variant_id');
+    }
+
 }

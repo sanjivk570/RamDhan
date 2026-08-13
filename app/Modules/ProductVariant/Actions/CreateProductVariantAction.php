@@ -41,7 +41,7 @@ class CreateProductVariantAction
              *     product.low_stock_threshold
              */
             $this->inventoryService
-                ->createInitialStockForProductVariant($productVariant);
+                ->createInitialStockForProductVariant($productVariant, $data);
 
             return $productVariant;
         });

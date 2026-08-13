@@ -41,7 +41,7 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'compare_price' => $this->compare_price,
             'cost_price' => $this->cost_price,
-            'stock_quantity' => $this->stock_quantity,
+            // 'stock_quantity' => $this->stock_quantity,
             'is_active' => $this->is_active,
             'is_featured' => $this->is_featured,
             'sort_order' => $this->sort_order,

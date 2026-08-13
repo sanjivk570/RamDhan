@@ -68,6 +68,8 @@ class UpdateProductRequest extends FormRequest
 
             "stock_quantity" => ["required", "integer", "min:0"],
 
+            "low_stock_threshold" => ["nullable", "integer", "min:0"],
+
             "is_active" => ["nullable", "boolean"],
 
             "is_featured" => ["nullable", "boolean"],

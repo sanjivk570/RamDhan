@@ -17,7 +17,7 @@ class ProductVariantRepository
         $product = Product::where("uuid", $productUuid)->firstOrFail();
 
         return ProductVariant::query()
-            ->with(["attributeValues.attributeValue.attribute"])
+            ->with(["attributeValues.attributeValue.attribute", "inventoryStock"])
             ->where("product_id", $product->id)
 
             ->when($filters["search"] ?? null, function ($query, $search) {
@@ -49,7 +49,7 @@ class ProductVariantRepository
         int $productId
     ): ?ProductVariant {
         return ProductVariant::query()
-            ->with(["attributeValues.attributeValue.attribute", "product"])
+            ->with(["attributeValues.attributeValue.attribute", "product", "inventoryStock"])
             ->where("uuid", $uuid)
             ->where("product_id", $productId)
             ->first();
@@ -60,7 +60,7 @@ class ProductVariantRepository
         int $productId
     ): ProductVariant {
         return ProductVariant::query()
-            ->with(["attributeValues.attributeValue.attribute", "product"])
+            ->with(["attributeValues.attributeValue.attribute", "product", "inventoryStock"])
             ->where("uuid", $uuid)
             ->where("product_id", $productId)
             ->firstOrFail();

@@ -51,16 +51,6 @@ return new class extends Migration {
             $table->decimal("cost_price", 12, 2)->nullable();
 
             /*
-             * Variant inventory foundation.
-             *
-             * Inventory module can later take
-             * ownership of stock transactions.
-             */
-            $table->unsignedInteger("stock_quantity")->default(0);
-
-            $table->unsignedInteger("low_stock_threshold")->default(5);
-
-            /*
              * Default variant.
              *
              * One product should have only one

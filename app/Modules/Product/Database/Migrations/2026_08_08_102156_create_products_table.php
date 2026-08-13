@@ -37,10 +37,6 @@ return new class extends Migration
             /* * Actual purchase/acquisition cost of the product. * * Used for: * - Profit calculation * - Margin calculation * - Inventory valuation * - Reporting */ 
             $table->decimal('cost_price', 12, 2)->nullable();
 
-            $table->unsignedInteger('stock_quantity')->default(0);
-
-            $table->unsignedInteger('low_stock_threshold')->default(5);
-
             $table->boolean('is_active')->default(true);
 
             $table->boolean('is_featured')->default(false);

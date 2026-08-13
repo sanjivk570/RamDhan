@@ -18,14 +18,14 @@ class InventoryStockRepository
      * @param Product $product
      * @return InventoryStock
      */
-    public function createInitialStockForProduct(Product $product): InventoryStock
+    public function createInitialStockForProduct(Product $product, array $data): InventoryStock
     {
         return InventoryStock::create([
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
             'product_id' => $product->id,
-            'quantity' => 0,
+            'quantity' => $data['stock_quantity'] ? $data['stock_quantity'] : 0,
             'reserved_quantity' => 0,
-            'low_stock_threshold' => $product->low_stock_threshold,
+            'low_stock_threshold' => $data['low_stock_threshold'] ? $data['low_stock_threshold'] : 0,
             'is_active' => true,
         ]);
     }
@@ -36,17 +36,59 @@ class InventoryStockRepository
      * @param Product $product
      * @return InventoryStock
      */
-    public function createInitialStockForProductVariant(ProductVariant $productVariant): InventoryStock
+    public function createInitialStockForProductVariant(ProductVariant $productVariant, array $data): InventoryStock
     {
         return InventoryStock::create([
             //'uuid' => (string) \Illuminate\Support\Str::uuid(),
             'product_id' => $productVariant->product_id,
             'product_variant_id' => $productVariant->id,
-            'quantity' => 0,
+            'quantity' => $data['stock_quantity'] ? $data['stock_quantity'] : 0,
             'reserved_quantity' => 0,
-            'low_stock_threshold' => $productVariant->low_stock_threshold,
+            'low_stock_threshold' => $data['low_stock_threshold'] ? $data['low_stock_threshold'] : 0,
             'is_active' => true,
         ]);
+    }
+
+
+    /** 
+     * upd initial inventory stock for a product.
+     *
+     * @param Product $product
+     * @return InventoryStock
+     */
+    public function updateInitialStockForProduct(Product $product, array $data): InventoryStock
+    {
+        $stock = InventoryStock::where('product_id', $product->id)->first();
+
+        if(!empty($data['stock_quantity']) ){
+            $stock->quantity = $data['stock_quantity'];
+        }
+        if(!empty($data['stock_quantity']) ){
+            $stock->low_stock_threshold = $data['low_stock_threshold'];
+        }
+        $stock->save();
+        return $stock->fresh();
+    }
+
+    /** 
+     * Update initial inventory stock for a product variant.
+     *
+     * @param ProductVariant $productVariant
+     * @return InventoryStock
+     */
+    public function updateInitialStockForProductVariant(ProductVariant $productVariant, array $data): InventoryStock
+    {
+        $stock = InventoryStock::where('product_variant_id', $productVariant->id)->where('product_id', $productVariant->product_id)->first();
+
+        if(!empty($data['stock_quantity']) ){
+            $stock->quantity = $data['stock_quantity'];
+        }
+        if(!empty($data['stock_quantity']) ){
+            $stock->low_stock_threshold = $data['low_stock_threshold'];
+        }
+        $stock->save();
+
+        return $stock->fresh();
     }
 
     /**

@@ -48,7 +48,7 @@ class CreateProductAction
             * low_stock_threshold =
             *     product.low_stock_threshold
             */
-        $this->inventoryService->createInitialStockForProduct($product);
+        $this->inventoryService->createInitialStockForProduct($product, $data);
 
         return $product;
     }

@@ -29,8 +29,8 @@ class InventoryService
      * @param Product $product
      * @return InventoryStock
      */
-    public function createInitialStockForProduct(Product $product): InventoryStock {
-        return $this->inventoryStockRepository->createInitialStockForProduct($product);
+    public function createInitialStockForProduct(Product $product, array $data): InventoryStock {
+        return $this->inventoryStockRepository->createInitialStockForProduct($product, $data);
     }
 
     /**
@@ -41,8 +41,32 @@ class InventoryService
      * @param ProductVariant $productVariant
      * @return InventoryStock
      */
-    public function createInitialStockForProductVariant(ProductVariant $productVariant): InventoryStock {
-        return $this->inventoryStockRepository->createInitialStockForProductVariant($productVariant);
+    public function createInitialStockForProductVariant(ProductVariant $productVariant, array $data): InventoryStock {
+        return $this->inventoryStockRepository->createInitialStockForProductVariant($productVariant, $data);
+    }
+
+    /**
+     * Update initial inventory stock for a product.
+     *
+     * New products always start with zero stock.
+     *
+     * @param Product $product
+     * @return InventoryStock
+     */
+    public function updateInitialStockForProduct(Product $product, array $data): InventoryStock {
+        return $this->inventoryStockRepository->updateInitialStockForProduct($product, $data);
+    }
+
+    /**
+     * Create initial inventory stock for a product variant
+     *
+     * New products always start with zero stock.
+     *
+     * @param ProductVariant $productVariant
+     * @return InventoryStock
+     */
+    public function updateInitialStockForProductVariant(ProductVariant $productVariant, array $data): InventoryStock {
+        return $this->inventoryStockRepository->updateInitialStockForProductVariant($productVariant, $data);
     }
 
     /**

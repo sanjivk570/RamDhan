@@ -6,6 +6,7 @@ namespace App\Modules\ProductVariant\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Modules\Inventory\Resources\InventoryStockResource;
 
 class ProductVariantResource extends JsonResource
 {
@@ -26,15 +27,16 @@ class ProductVariantResource extends JsonResource
             "compare_price" => $this->compare_price,
             "cost_price" => $this->cost_price,
 
-            "stock_quantity" => $this->stock_quantity,
-            "low_stock_threshold" => $this->low_stock_threshold,
-
             "is_default" => $this->is_default,
             "is_active" => $this->is_active,
             "sort_order" => $this->sort_order,
 
             "attribute_values" => ProductVariantAttributeValueResource::collection(
                 $this->whenLoaded("attributeValues")
+            ),
+
+            'inventory' => new InventoryStockResource(
+                $this->whenLoaded('inventoryStock')
             ),
 
             "created_at" => $this->created_at?->toISOString(),
