@@ -53,4 +53,12 @@ enum PermissionEnum: string
     case PRODUCT_UPDATE = 'product.update';
     case PRODUCT_DELETE = 'product.delete';
     case PRODUCT_RESTORE = 'product.restore';
+
+    // customer permisions
+    case CUSTOMER_VIEW = 'customer.view';
+    case CUSTOMER_CREATE = 'customer.create';
+    case CUSTOMER_UPDATE = 'customer.update';
+    case CUSTOMER_DELETE = 'customer.delete';
+    case CUSTOMER_RESTORE = 'customer.restore';
+    
 }
