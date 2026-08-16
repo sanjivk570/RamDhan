@@ -11,6 +11,8 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Str;
 use App\Modules\Auth\Notifications\ResetPasswordNotification;
+use App\Modules\Supplier\Models\Supplier;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * User model.
@@ -38,6 +40,9 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'uuid',
+        'supplier_id',
+        'user_type',
+        'is_primary_supplier_user',
         'first_name',
         'last_name',
         'email',
@@ -58,6 +63,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected string $guard_name = 'web';
+
     /**
      * Get the model's attribute casting definitions.
      *
@@ -71,6 +78,8 @@ class User extends Authenticatable
             'last_login_at'      => 'datetime',
             'password'           => 'hashed',
             'is_active'          => 'boolean',
+            'supplier_id' => 'integer',
+            'is_primary_supplier_user' => 'boolean',
         ];
     }
 
@@ -114,6 +123,16 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function isSupplier(): bool
+    {
+        return $this->user_type === 'supplier' && $this->supplier_id !== null;
     }
 
 }

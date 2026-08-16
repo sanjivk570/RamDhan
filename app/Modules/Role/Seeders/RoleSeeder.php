@@ -7,6 +7,7 @@ namespace App\Modules\Role\Seeders;
 use Illuminate\Database\Seeder;
 use App\Core\Enums\RoleEnum;
 use App\Modules\Role\Models\Role;
+use App\Core\Enums\SupplierRoleEnum;
 
 /**
  * Seed the application's roles.
@@ -31,6 +32,21 @@ class RoleSeeder extends Seeder
     {
         
         foreach (RoleEnum::cases() as $role) {
+
+            Role::firstOrCreate(
+                [
+                    'name' => $role->value,
+                    'guard_name' => 'web',
+                ],
+                [
+                    'display_name' => $role->displayName(),
+                    'is_system' => true,
+                ]
+            );
+        }
+
+        //For supplier
+        foreach (SupplierRoleEnum::cases() as $role) {
 
             Role::firstOrCreate(
                 [

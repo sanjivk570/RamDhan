@@ -60,5 +60,23 @@ enum PermissionEnum: string
     case CUSTOMER_UPDATE = 'customer.update';
     case CUSTOMER_DELETE = 'customer.delete';
     case CUSTOMER_RESTORE = 'customer.restore';
+
+    // supplier permisions
+    case SUPPLIER_VIEW = 'supplier.view';
+    case SUPPLIER_CREATE = 'supplier.create';
+    case SUPPLIER_UPDATE = 'supplier.update';
+    case SUPPLIER_DELETE = 'supplier.delete';
+    case SUPPLIER_RESTORE = 'supplier.restore';
+
+    case SUPPLIER_USER_VIEW = 'supplier.user.view';
+    case SUPPLIER_USER_CREATE = 'supplier.user.create';
+    case SUPPLIER_USER_UPDATE = 'supplier.user.update';
+    case SUPPLIER_USER_DELETE = 'supplier.user.delete';
+
+    case SUPPLIER_PURCHASE_VIEW = 'supplier.purchase.view';
+    case SUPPLIER_PURCHASE_UPDATE = 'supplier.purchase.update';
+
+    case SUPPLIER_INVOICE_VIEW = 'supplier.invoice.view';
+    case SUPPLIER_PAYMENT_VIEW = 'supplier.payment.view';
     
 }
