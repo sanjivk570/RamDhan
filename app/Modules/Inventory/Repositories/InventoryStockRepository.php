@@ -221,4 +221,36 @@ class InventoryStockRepository
             ->latest()
             ->paginate($perPage);
     }
+
+    /**
+     * Find inventory stock by product and optional variant.
+     *
+     * For a simple product:
+     *   product_id = X
+     *   product_variant_id = NULL
+     *
+     * For a variant:
+     *   product_id = X
+     *   product_variant_id = Y
+     */
+    public function findByProductAndVariant(
+        int $productId,
+        ?int $productVariantId = null
+    ): ?InventoryStock {
+        return InventoryStock::query()
+            ->where("product_id", $productId)
+            ->when(
+                $productVariantId !== null,
+                fn ($query) => $query->where(
+                    "product_variant_id",
+                    $productVariantId
+                ),
+                fn ($query) => $query->whereNull(
+                    "product_variant_id"
+                )
+            )
+            ->first();
+    }
+
+
 }

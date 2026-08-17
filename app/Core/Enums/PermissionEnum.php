@@ -78,5 +78,25 @@ enum PermissionEnum: string
 
     case SUPPLIER_INVOICE_VIEW = 'supplier.invoice.view';
     case SUPPLIER_PAYMENT_VIEW = 'supplier.payment.view';
+
+    //for purchase
+    case PURCHASE_VIEW = 'purchase.view';
+    case PURCHASE_CREATE = 'purchase.create';
+    case PURCHASE_UPDATE = 'purchase.update';
+    case PURCHASE_SUBMIT = 'purchase.submit';
+    case PURCHASE_APPROVE = 'purchase.approve';
+    case PURCHASE_CANCEL = 'purchase.cancel';
+    case PURCHASE_GRN_VIEW = 'purchase.grn.view';
+    case PURCHASE_GRN_CREATE = 'purchase.grn.create';
+    case PURCHASE_GRN_POST = 'purchase.grn.post';
+    case PURCHASE_GRN_VOID = 'purchase.grn.void';
+    case PURCHASE_INVOICE_VIEW = 'purchase.invoice.view';
+    case PURCHASE_INVOICE_CREATE = 'purchase.invoice.create';
+    case PURCHASE_INVOICE_POST = 'purchase.invoice.post';
+    case PURCHASE_PAYMENT_VIEW = 'purchase.payment.view';
+    case PURCHASE_PAYMENT_CREATE = 'purchase.payment.create';
+    case PURCHASE_RETURN_VIEW = 'purchase.return.view';
+    case PURCHASE_RETURN_CREATE = 'purchase.return.create';
+    case PURCHASE_RETURN_POST = 'purchase.return.post';
     
 }
