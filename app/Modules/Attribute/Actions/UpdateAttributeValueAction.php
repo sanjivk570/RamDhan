@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Attribute\Actions;
+
+use App\Modules\Attribute\Services\AttributeValueService;
+
+class UpdateAttributeValueAction
+{
+    public function __construct(
+        private readonly AttributeValueService $attributeValueService
+    ) {
+    }
+
+    public function execute(
+        string $attributeUuid,
+        string $valueUuid,
+        array $data
+    ) {
+        return $this->attributeValueService->update(
+            $attributeUuid,
+            $valueUuid,
+            $data
+        );
+    }
+}
