@@ -1,0 +1,525 @@
+{
+  "info": {
+    "name": "RamDhan - Purchase Module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://dev.ramdhan.in"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_TOKEN"
+    },
+    {
+      "key": "supplier_uuid",
+      "value": "SUPPLIER_UUID"
+    },
+    {
+      "key": "po_uuid",
+      "value": "PO_UUID"
+    },
+    {
+      "key": "grn_uuid",
+      "value": "GRN_UUID"
+    },
+    {
+      "key": "product_uuid",
+      "value": "PRODUCT_UUID"
+    },
+    {
+      "key": "variant_uuid",
+      "value": "VARIANT_UUID"
+    }
+  ],
+  "item": [
+    {
+      "name": "Purchase Orders",
+      "item": [
+        {
+          "name": "List Purchase Orders + Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchase-orders?page=1&per_page=20&sort_by=created_at&sort_order=desc&search=PO&filters[supplier]=1&filters[status]=approved&filters[from_date]=2026-08-01&filters[to_date]=2026-08-31",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchase-orders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "created_at"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "desc"
+                },
+                {
+                  "key": "search",
+                  "value": "PO"
+                },
+                {
+                  "key": "filters[supplier]",
+                  "value": "1"
+                },
+                {
+                  "key": "filters[status]",
+                  "value": "approved"
+                },
+                {
+                  "key": "filters[from_date]",
+                  "value": "2026-08-01"
+                },
+                {
+                  "key": "filters[to_date]",
+                  "value": "2026-08-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Purchase Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchase-orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchase-orders"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplier_uuid\": \"{{supplier_uuid}}\",\n  \"order_date\": \"2026-08-17\",\n  \"expected_date\": \"2026-08-25\",\n  \"payment_terms_days\": 30,\n  \"currency_code\": \"INR\",\n  \"shipping_amount\": 250,\n  \"notes\": \"Initial replenishment purchase\",\n  \"items\": [\n    {\n      \"product_uuid\": \"{{product_uuid}}\",\n      \"product_variant_uuid\": \"{{variant_uuid}}\",\n      \"unit_id\": 1,\n      \"sku\": \"SKU-001\",\n      \"description\": \"Purchase item\",\n      \"quantity\": 50,\n      \"unit_price\": 1500,\n      \"discount_amount\": 1000,\n      \"tax_rate\": 18\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Purchase Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchase-orders/{{po_uuid}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchase-orders",
+                "{{po_uuid}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Purchase Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchase-orders/{{po_uuid}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchase-orders",
+                "{{po_uuid}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplier_uuid\": \"{{supplier_uuid}}\",\n  \"order_date\": \"2026-08-17\",\n  \"expected_date\": \"2026-08-26\",\n  \"payment_terms_days\": 30,\n  \"currency_code\": \"INR\",\n  \"shipping_amount\": 300,\n  \"notes\": \"Updated PO\",\n  \"items\": [\n    {\n      \"product_uuid\": \"{{product_uuid}}\",\n      \"product_variant_uuid\": \"{{variant_uuid}}\",\n      \"unit_id\": 1,\n      \"quantity\": 60,\n      \"unit_price\": 1450,\n      \"discount_amount\": 0,\n      \"tax_rate\": 18\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Submit PO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchase-orders/{{po_uuid}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchase-orders",
+                "{{po_uuid}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve PO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchase-orders/{{po_uuid}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchase-orders",
+                "{{po_uuid}}",
+                "approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel PO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchase-orders/{{po_uuid}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchase-orders",
+                "{{po_uuid}}",
+                "cancel"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Supplier unable to fulfill order\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Goods Receipts",
+      "item": [
+        {
+          "name": "List GRNs + Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/goods-receipts?page=1&per_page=20&sort_by=receipt_date&sort_order=desc&search=GRN&filters[supplier]=1&filters[status]=posted&filters[from_date]=2026-08-01&filters[to_date]=2026-08-31",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "goods-receipts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "receipt_date"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "desc"
+                },
+                {
+                  "key": "search",
+                  "value": "GRN"
+                },
+                {
+                  "key": "filters[supplier]",
+                  "value": "1"
+                },
+                {
+                  "key": "filters[status]",
+                  "value": "posted"
+                },
+                {
+                  "key": "filters[from_date]",
+                  "value": "2026-08-01"
+                },
+                {
+                  "key": "filters[to_date]",
+                  "value": "2026-08-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create GRN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/goods-receipts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "goods-receipts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purchase_order_uuid\": \"{{po_uuid}}\",\n  \"receipt_date\": \"2026-08-25\",\n  \"supplier_document_date\": \"2026-08-24\",\n  \"supplier_document_number\": \"INV-DEL-1001\",\n  \"notes\": \"Received in good condition\",\n  \"items\": [\n    {\n      \"purchase_order_item_uuid\": \"PO_ITEM_UUID\",\n      \"received_quantity\": 50,\n      \"accepted_quantity\": 48,\n      \"rejected_quantity\": 2,\n      \"unit_cost\": 1450,\n      \"batch_number\": \"BATCH-2026-08\",\n      \"expiry_date\": \"2027-08-25\",\n      \"notes\": \"Two units damaged\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get GRN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/goods-receipts/{{grn_uuid}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "goods-receipts",
+                "{{grn_uuid}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Post GRN / Stock In",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/goods-receipts/{{grn_uuid}}/post",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "goods-receipts",
+                "{{grn_uuid}}",
+                "post"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Void GRN",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/goods-receipts/{{grn_uuid}}/void",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "goods-receipts",
+                "{{grn_uuid}}",
+                "void"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Incorrect receipt entry\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+namespace App\Modules\Purchase\Actions;
+use App\Modules\Purchase\Services\PurchaseOrderService;
+final class CreatePurchaseOrderAction
+{
+    public function __construct(private readonly PurchaseOrderService $service)
+    {
+    }
+    public function execute(array $data, ?int $userId)
+    {
+        return $this->service->create($data, $userId);
+    }
+}
