@@ -20,6 +20,7 @@ final class OrderController extends Controller
         private readonly AdminListOrdersAction $listAction,
         private readonly AdminShowOrderAction $showAction,
         private readonly ChangeOrderStatusAction $statusAction,
+        private readonly \App\Modules\Order\Actions\AdminShowOrderSummaryAction $summaryAction,
     ) {}
 
     public function index(OrderListRequest $request)
@@ -53,6 +54,14 @@ final class OrderController extends Controller
                 $request->user()->id,
             )),
             'Order status updated successfully.'
+        );
+    }
+
+    public function summary(string $uuid)
+    {
+        return ApiResponse::success(
+            $this->summaryAction->execute($uuid),
+            'Order summary fetched successfully.'
         );
     }
 }

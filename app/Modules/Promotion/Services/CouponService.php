@@ -13,24 +13,32 @@ final class CouponService
         float $subtotal,
         ?int $customerId = null
     ): Coupon {
+        // Use lockForUpdate to prevent race conditions on coupon usage limits
         $c = Coupon::whereRaw("UPPER(code)=?", [strtoupper(trim($code))])
             ->where("is_active", true)
+            ->whereNull("deleted_at") // Explicitly exclude soft-deleted coupons
             ->where(function ($q) {
                 $q->whereNull("starts_at")->orWhere("starts_at", "<=", now());
             })
             ->where(function ($q) {
                 $q->whereNull("ends_at")->orWhere("ends_at", ">=", now());
             })
+            ->lockForUpdate()
             ->firstOrFail();
+
         if ($subtotal < (float) $c->minimum_order_amount) {
             throw new RuntimeException(
                 "Minimum order amount for this coupon is " .
                     $c->minimum_order_amount
             );
         }
+
+        // Check global usage limit
         if ($c->usage_limit !== null && $c->used_count >= $c->usage_limit) {
             throw new RuntimeException("Coupon usage limit reached.");
         }
+
+        // Check per-customer limit
         if ($customerId && $c->per_customer_limit !== null) {
             $used = DB::table("coupon_redemptions")
                 ->where("coupon_id", $c->id)
@@ -42,6 +50,7 @@ final class CouponService
                 );
             }
         }
+
         return $c;
     }
     public function discount(Coupon $c, float $subtotal): float

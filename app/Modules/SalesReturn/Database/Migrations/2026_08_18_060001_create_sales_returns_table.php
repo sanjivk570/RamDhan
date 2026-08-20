@@ -41,6 +41,10 @@ return new class extends Migration {
             $table->timestamp("rejected_at")->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('processed_by')->references('id')->on('users')->onDelete('set null');
         });
     }
     public function down(): void

@@ -16,6 +16,10 @@ return new class extends Migration {
             $table->decimal('discount_amount',15,2)->default(0); $table->decimal('tax_rate',8,4)->default(0); $table->decimal('tax_amount',15,2)->default(0);
             $table->decimal('line_subtotal',15,2)->default(0); $table->decimal('line_total',15,2)->default(0); $table->timestamps();
             $table->index(['cart_id','product_id','product_variant_id'], 'cart_item_product_idx');
+            $table->foreign('cart_id')->references('id')->on('carts')->onDelete('cascade');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('product_variant_id')->references('id')->on('product_variants')->onDelete('set null');
+            $table->foreign('tax_class_id')->references('id')->on('taxes')->onDelete('set null');
         });
     }
     public function down(): void { Schema::dropIfExists('cart_items'); }

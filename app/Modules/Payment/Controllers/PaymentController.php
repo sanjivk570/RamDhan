@@ -62,13 +62,47 @@ final class PaymentController extends Controller
 
     public function webhook(WebhookRequest $request)
     {
+        // Verify webhook signature based on provider
+        $provider = $request->string('provider')->toString();
+        $signature = $request->header('X-Webhook-Signature');
+        
+        if (!$signature) {
+            return ApiResponse::error('Missing webhook signature.', 401);
+        }
+
+        // Basic signature verification - can be extended per provider
+        if (!$this->verifyWebhookSignature($provider, $request, $signature)) {
+            return ApiResponse::error('Invalid webhook signature.', 401);
+        }
+
         $result = $this->webhookAction->execute(
-            $request->string('provider')->toString(),
+            $provider,
             $request->string('event')->toString(),
             $request->input('payload', []),
             $request->headers->all(),
         );
 
         return ApiResponse::success($result, 'Payment webhook processed successfully.');
+    }
+
+    private function verifyWebhookSignature(string $provider, WebhookRequest $request, string $signature): bool
+    {
+        // TODO: Implement provider-specific signature verification
+        // For now, implement basic HMAC-SHA256 verification
+        $secret = match($provider) {
+            'stripe' => config('services.stripe.webhook_secret'),
+            'razorpay' => config('services.razorpay.webhook_secret'),
+            'paypal' => config('services.paypal.webhook_secret'),
+            default => null,
+        };
+
+        if (!$secret) {
+            return false;
+        }
+
+        $payload = $request->getContent();
+        $computedSignature = hash_hmac('sha256', $payload, $secret);
+        
+        return hash_equals($computedSignature, $signature);
     }
 }

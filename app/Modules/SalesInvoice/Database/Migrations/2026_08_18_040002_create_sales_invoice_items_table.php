@@ -30,6 +30,9 @@ return new class extends Migration {
             $table->decimal("line_subtotal", 15, 2)->default(0);
             $table->decimal("line_total", 15, 2)->default(0);
             $table->timestamps();
+            $table->foreign('sales_invoice_id')->references('id')->on('sales_invoices')->onDelete('cascade');
+            $table->foreign('order_item_id')->references('id')->on('order_items')->onDelete('cascade');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
         });
     }
     public function down(): void

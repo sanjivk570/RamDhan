@@ -95,6 +95,14 @@ final class ShipmentService
     public function ship(Shipment $s): Shipment
     {
         return DB::transaction(function () use ($s) {
+            // Validate current shipment status - can only ship from pending/created status
+            if (!in_array($s->status, ['pending', 'created'], true)) {
+                throw new RuntimeException(
+                    'Shipment cannot be shipped from ' . $s->status . ' status. ' .
+                    'Only pending or created shipments can be shipped.'
+                );
+            }
+
             $s->load("items", "order");
             foreach ($s->items as $si) {
                 $q = DB::table("inventory_stocks")->where(

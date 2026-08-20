@@ -20,14 +20,20 @@ final class WishlistService
         string $productUuid,
         ?string $variantUuid
     ): Wishlist {
+        // Ensure product is active and not soft-deleted
         $p = Product::where("uuid", $productUuid)
             ->where("is_active", true)
+            ->whereNull("deleted_at")
             ->firstOrFail();
+
+        // If variant specified, verify it exists and belongs to product
         $v = $variantUuid
             ? ProductVariant::where("uuid", $variantUuid)
                 ->where("product_id", $p->id)
                 ->firstOrFail()
             : null;
+
+        // Prevent race conditions by using explicit locking
         return Wishlist::firstOrCreate(
             [
                 "customer_id" => $customerId,

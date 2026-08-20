@@ -29,6 +29,8 @@ final class OrderController extends Controller
         private readonly ShowGuestOrderAction $guestShowAction,
         private readonly CancelOrderAction $cancelAction,
         private readonly ReorderAction $reorderAction,
+        private readonly \App\Modules\Order\Actions\ShowOrderSummaryAction $summaryAction,
+        private readonly \App\Modules\Order\Actions\GuestShowOrderSummaryAction $guestSummaryAction,
     ) {}
 
     public function checkout(CheckoutRequest $request)
@@ -85,14 +87,41 @@ final class OrderController extends Controller
         );
     }
 
+    public function summary(Request $request, string $uuid)
+    {
+        $customerId = !empty($request->user()?->id) ? $request->user()?->id : auth('customer')->user()?->id;
+
+        return ApiResponse::success(
+            $this->summaryAction->execute($customerId, $uuid),
+            'Order summary fetched successfully.'
+        );
+    }
+
     public function guestShow(Request $request, string $orderNumber)
     {
+        $guestToken = $request->header('X-Guest-Token') ?: $request->input('guest_token');
+        
+        if (!$guestToken) {
+            return ApiResponse::error('Guest token is required.', 401);
+        }
+
         return ApiResponse::success(
-            new OrderResource($this->guestShowAction->execute(
-                $orderNumber,
-                $request->header('X-Guest-Token'),
-            )),
+            new OrderResource($this->guestShowAction->execute($orderNumber, $guestToken)),
             'Order fetched successfully.'
+        );
+    }
+
+    public function guestSummary(Request $request, string $orderNumber)
+    {
+        $guestToken = $request->header('X-Guest-Token') ?: $request->input('guest_token');
+        
+        if (!$guestToken) {
+            return ApiResponse::error('Guest token is required.', 401);
+        }
+
+        return ApiResponse::success(
+            $this->guestSummaryAction->execute($orderNumber, $guestToken),
+            'Guest order summary fetched successfully.'
         );
     }
 

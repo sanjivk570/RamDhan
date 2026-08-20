@@ -20,6 +20,10 @@ return new class extends Migration {
                 ->index();
             $table->decimal("quantity", 15, 3);
             $table->timestamps();
+            $table->foreign('shipment_id')->references('id')->on('shipments')->onDelete('cascade');
+            $table->foreign('order_item_id')->references('id')->on('order_items')->onDelete('cascade');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('product_variant_id')->references('id')->on('product_variants')->onDelete('set null');
         });
     }
     public function down(): void

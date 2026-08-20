@@ -35,6 +35,8 @@ return new class extends Migration {
             $table->text("notes")->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
     }
     public function down(): void

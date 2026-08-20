@@ -10,8 +10,8 @@ final class CreatePaymentIntentRequest extends BaseRequest
     {
         return [
             "order_uuid" => ["required", "uuid"],
-            "provider" => ["required", "string", "max:50"],
-            "method" => ["required", "string", "max:40"],
+            "provider" => ["required", "string", "in:stripe,razorpay,paypal,wallet"],
+            "method" => ["required", "string", "in:card,upi,netbanking,wallet,cod"],
         ];
     }
 }

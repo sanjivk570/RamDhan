@@ -17,11 +17,13 @@ final class SalesReturnService
                 ->where("customer_id", $customerId)
                 ->with("items")
                 ->firstOrFail();
+            
             if (!in_array($o->status, ["delivered", "completed"], true)) {
                 throw new RuntimeException(
                     "Return is allowed only for delivered/completed orders."
                 );
             }
+
             $r = SalesReturn::create([
                 "order_id" => $o->id,
                 "customer_id" => $customerId,
@@ -30,14 +32,25 @@ final class SalesReturnService
                 "reason" => $data["reason"] ?? null,
                 "customer_note" => $data["customer_note"] ?? null,
             ]);
+
             $total = 0;
             foreach ($data["items"] as $row) {
                 $oi = $o->items->first(
                     fn($x) => $x->uuid === $row["order_item_uuid"]
                 );
+                
                 if (!$oi) {
                     throw new RuntimeException("Order item not found.");
                 }
+
+                // Validate return quantity does not exceed order quantity
+                if ((float) $row["quantity"] > (float) $oi->quantity) {
+                    throw new RuntimeException(
+                        "Return quantity (" . $row["quantity"] . ") exceeds ordered quantity (" . 
+                        $oi->quantity . ") for " . $oi->sku
+                    );
+                }
+
                 $line = (float) $oi->unit_price * (float) $row["quantity"];
                 $r->items()->create([
                     "order_item_id" => $oi->id,
@@ -50,6 +63,7 @@ final class SalesReturnService
                 ]);
                 $total += $line;
             }
+
             $r->update(["total_amount" => $total]);
             return $r->load("items");
         });
@@ -81,8 +95,11 @@ final class SalesReturnService
         int $userId
     ): SalesReturn {
         if ($action === "approve") {
+            // Validate status transition: can only approve from "requested"
             if ($r->status !== "requested") {
-                throw new RuntimeException("Return is not awaiting approval.");
+                throw new RuntimeException(
+                    "Return is not awaiting approval. Current status: " . $r->status
+                );
             }
             $r->update([
                 "status" => "approved",
@@ -91,8 +108,11 @@ final class SalesReturnService
                 "approved_at" => now(),
             ]);
         } elseif ($action === "reject") {
+            // Validate status transition: can only reject from "requested"
             if ($r->status !== "requested") {
-                throw new RuntimeException("Return is not awaiting approval.");
+                throw new RuntimeException(
+                    "Return is not awaiting approval. Current status: " . $r->status
+                );
             }
             $r->update([
                 "status" => "rejected",
@@ -101,11 +121,13 @@ final class SalesReturnService
                 "rejected_at" => now(),
             ]);
         } else {
+            // "receive" action - can only receive approved returns
             if ($r->status !== "approved") {
                 throw new RuntimeException(
-                    "Return must be approved before receiving."
+                    "Return must be approved before receiving. Current status: " . $r->status
                 );
             }
+
             $r->load("items");
             DB::transaction(function () use ($r) {
                 foreach ($r->items as $item) {

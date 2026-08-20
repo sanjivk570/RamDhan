@@ -20,6 +20,8 @@ return new class extends Migration {
         $table->text('customer_note')->nullable(); $table->text('internal_note')->nullable();
         $table->timestamp('placed_at')->nullable(); $table->timestamp('cancelled_at')->nullable(); $table->unsignedBigInteger('cancelled_by')->nullable()->index(); $table->text('cancellation_reason')->nullable();
         $table->timestamps(); $table->softDeletes(); $table->index(['created_at','status']);
+        $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
+        $table->foreign('cancelled_by')->references('id')->on('users')->onDelete('set null');
     }); }
     public function down(): void { Schema::dropIfExists('orders'); }
 };

@@ -41,6 +41,8 @@ return new class extends Migration {
             $table->json("payload")->nullable();
             $table->text("failure_reason")->nullable();
             $table->timestamps();
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->foreign('payment_intent_id')->references('id')->on('payment_intents')->onDelete('set null');
         });
     }
     public function down(): void

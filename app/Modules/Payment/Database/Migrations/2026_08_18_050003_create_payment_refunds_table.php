@@ -30,6 +30,8 @@ return new class extends Migration {
             $table->string("reason", 500)->nullable();
             $table->json("payload")->nullable();
             $table->timestamps();
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->foreign('payment_transaction_id')->references('id')->on('payment_transactions')->onDelete('set null');
         });
     }
     public function down(): void

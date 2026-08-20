@@ -23,6 +23,9 @@ return new class extends Migration {
             $table->decimal("discount_amount", 15, 2);
             $table->timestamps();
             $table->unique(["coupon_id", "order_id"], "coupon_order_unique");
+            $table->foreign('coupon_id')->references('id')->on('coupons')->onDelete('cascade');
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
         });
     }
     public function down(): void

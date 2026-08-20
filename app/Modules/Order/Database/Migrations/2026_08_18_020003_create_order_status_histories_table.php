@@ -23,6 +23,8 @@ return new class extends Migration {
             $table->string("source", 30)->default("system");
             $table->text("note")->nullable();
             $table->timestamps();
+            $table->foreign("order_id")->references("id")->on("orders")->onDelete("cascade");
+            $table->foreign("changed_by")->references("id")->on("users")->onDelete("set null");
         });
     }
     public function down(): void

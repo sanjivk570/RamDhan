@@ -359,6 +359,68 @@ final class OrderService
             ->where("uuid", $uuid)
             ->firstOrFail();
     }
+
+    public function adminSummary(string $uuid): array
+    {
+        $order = $this->adminShow($uuid);
+
+        // Invoice
+        $invoice = \App\Modules\SalesInvoice\Models\SalesInvoice::where('order_id', $order->id)->with('items')->first();
+
+        // Payments (transactions)
+        $payments = \App\Modules\Payment\Models\PaymentTransaction::where('order_id', $order->id)->latest()->get();
+
+        // Shipments
+        $shipments = \App\Modules\Shipment\Models\Shipment::with('items')->where('order_id', $order->id)->get();
+
+        return [
+            'order' => new \App\Modules\Order\Resources\OrderResource($order),
+            'invoice' => $invoice ? new \App\Modules\SalesInvoice\Resources\SalesInvoiceResource($invoice) : null,
+            'payments' => \App\Modules\Payment\Resources\PaymentTransactionResource::collection($payments),
+            'shipments' => \App\Modules\Shipment\Resources\ShipmentResource::collection($shipments),
+        ];
+    }
+
+    public function customerSummary(int $customerId, string $uuid): array
+    {
+        $order = Order::with('items', 'histories')
+            ->where('uuid', $uuid)
+            ->where('customer_id', $customerId)
+            ->firstOrFail();
+
+        $invoice = \App\Modules\SalesInvoice\Models\SalesInvoice::where('order_id', $order->id)->with('items')->first();
+        $payments = \App\Modules\Payment\Models\PaymentTransaction::where('order_id', $order->id)->latest()->get();
+        $shipments = \App\Modules\Shipment\Models\Shipment::with('items')->where('order_id', $order->id)->get();
+
+        return [
+            'order' => new \App\Modules\Order\Resources\OrderResource($order),
+            'invoice' => $invoice ? new \App\Modules\SalesInvoice\Resources\SalesInvoiceResource($invoice) : null,
+            'payments' => \App\Modules\Payment\Resources\PaymentTransactionResource::collection($payments),
+            'shipments' => \App\Modules\Shipment\Resources\ShipmentResource::collection($shipments),
+        ];
+    }
+
+    public function guestSummary(string $orderNumber, ?string $guestToken): array
+    {
+        $order = Order::with('items', 'histories')
+            ->where('order_number', $orderNumber)
+            ->firstOrFail();
+
+        if ($order->guest_token && $order->guest_token !== $guestToken) {
+            throw new RuntimeException('Unauthorized access to guest order.');
+        }
+
+        $invoice = \App\Modules\SalesInvoice\Models\SalesInvoice::where('order_id', $order->id)->with('items')->first();
+        $payments = \App\Modules\Payment\Models\PaymentTransaction::where('order_id', $order->id)->latest()->get();
+        $shipments = \App\Modules\Shipment\Models\Shipment::with('items')->where('order_id', $order->id)->get();
+
+        return [
+            'order' => new \App\Modules\Order\Resources\OrderResource($order),
+            'invoice' => $invoice ? new \App\Modules\SalesInvoice\Resources\SalesInvoiceResource($invoice) : null,
+            'payments' => \App\Modules\Payment\Resources\PaymentTransactionResource::collection($payments),
+            'shipments' => \App\Modules\Shipment\Resources\ShipmentResource::collection($shipments),
+        ];
+    }
     public function changeStatus(
         Order $order,
         string $status,

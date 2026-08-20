@@ -23,6 +23,7 @@ return new class extends Migration {
             $table->timestamp('expires_at')->nullable()->index();
             $table->timestamps(); $table->softDeletes();
             $table->index(['customer_id','status']);
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
         });
     }
     public function down(): void { Schema::dropIfExists('carts'); }

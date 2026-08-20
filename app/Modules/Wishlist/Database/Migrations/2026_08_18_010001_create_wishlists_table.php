@@ -23,6 +23,9 @@ return new class extends Migration {
                 ["customer_id", "product_id", "product_variant_id"],
                 "wishlist_unique_item"
             );
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('product_variant_id')->references('id')->on('product_variants')->onDelete('set null');
         });
     }
     public function down(): void

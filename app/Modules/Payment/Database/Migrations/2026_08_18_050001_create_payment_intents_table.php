@@ -32,6 +32,8 @@ return new class extends Migration {
             $table->json("provider_response")->nullable();
             $table->timestamp("expires_at")->nullable();
             $table->timestamps();
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
         });
     }
     public function down(): void

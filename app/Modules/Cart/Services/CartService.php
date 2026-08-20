@@ -136,41 +136,54 @@ final class CartService
     }
     public function merge(Cart $customerCart, Cart $guestCart): Cart
     {
-        foreach ($guestCart->items as $item) {
-            $existing = $customerCart
-                ->items()
-                ->where("product_id", $item->product_id)
-                ->where("product_variant_id", $item->product_variant_id)
+        return DB::transaction(function () use ($customerCart, $guestCart) {
+            // Lock both carts to prevent concurrent modifications
+            $guestCart = Cart::where("id", $guestCart->id)
+                ->lockForUpdate()
                 ->first();
-            if ($existing) {
-                $existing->update([
-                    "quantity" =>
-                        (float) $existing->quantity + (float) $item->quantity,
-                ]);
-            } else {
-                $customerCart
-                    ->items()
-                    ->create(
-                        $item->only([
-                            "product_id",
-                            "tax_class_id",
-                            "product_variant_id",
-                            "sku",
-                            "product_name",
-                            "variant_name",
-                            "quantity",
-                            "unit_price",
-                            "compare_price",
-                            "discount_amount",
-                            "tax_rate",
-                            "tax_amount",
-                            "line_subtotal",
-                            "line_total",
-                        ])
-                    );
+
+            if ($guestCart->status !== "active") {
+                throw new RuntimeException("Guest cart is no longer active.");
             }
-        }
-        $guestCart->update(["status" => "merged"]);
-        return $this->recalculate($customerCart);
+
+            foreach ($guestCart->items as $item) {
+                $existing = $customerCart
+                    ->items()
+                    ->where("product_id", $item->product_id)
+                    ->where("product_variant_id", $item->product_variant_id)
+                    ->first();
+
+                if ($existing) {
+                    $existing->update([
+                        "quantity" =>
+                            (float) $existing->quantity + (float) $item->quantity,
+                    ]);
+                } else {
+                    $customerCart
+                        ->items()
+                        ->create(
+                            $item->only([
+                                "product_id",
+                                "tax_class_id",
+                                "product_variant_id",
+                                "sku",
+                                "product_name",
+                                "variant_name",
+                                "quantity",
+                                "unit_price",
+                                "compare_price",
+                                "discount_amount",
+                                "tax_rate",
+                                "tax_amount",
+                                "line_subtotal",
+                                "line_total",
+                            ])
+                        );
+                }
+            }
+
+            $guestCart->update(["status" => "merged"]);
+            return $this->recalculate($customerCart->fresh("items"));
+        });
     }
 }

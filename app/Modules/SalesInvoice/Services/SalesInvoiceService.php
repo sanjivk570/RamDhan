@@ -11,10 +11,15 @@ final class SalesInvoiceService
     public function createForOrder(Order $order): SalesInvoice
     {
         return DB::transaction(function () use ($order) {
-            $existing = SalesInvoice::where("order_id", $order->id)->first();
+            // Use lockForUpdate to ensure idempotency in concurrent scenarios
+            $existing = SalesInvoice::where("order_id", $order->id)
+                ->lockForUpdate()
+                ->first();
+            
             if ($existing) {
                 return $existing->load("items");
             }
+
             $i = SalesInvoice::create([
                 "order_id" => $order->id,
                 "customer_id" => $order->customer_id,
@@ -30,6 +35,7 @@ final class SalesInvoiceService
                 "due_amount" => $order->grand_total,
                 "billing_address" => $order->billing_address,
             ]);
+
             foreach ($order->items as $oi) {
                 $i->items()->create([
                     "order_item_id" => $oi->id,
@@ -48,6 +54,7 @@ final class SalesInvoiceService
                     "line_total" => $oi->line_total,
                 ]);
             }
+
             return $i->load("items");
         });
     }
