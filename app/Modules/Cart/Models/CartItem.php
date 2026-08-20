@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Cart\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Modules\Product\Models\Product;
+use App\Modules\ProductVariant\Models\ProductVariant;
+
 final class CartItem extends Model
 {
     protected $fillable = [
@@ -43,5 +47,15 @@ final class CartItem extends Model
         static::creating(
             fn(CartItem $m) => ($m->uuid ??= (string) Str::uuid())
         );
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
     }
 }
