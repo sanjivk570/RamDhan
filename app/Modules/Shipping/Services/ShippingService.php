@@ -474,4 +474,226 @@ class ShippingService
             ];
         });
     }
+
+    /**
+     * Resolve and validate a selected shipping rate.
+     *
+     * IMPORTANT:
+     * Frontend only sends the selected rate UUID.
+     * Shipping amount is ALWAYS calculated server-side.
+     *
+     * @param string $rateUuid
+     * @param array<string, mixed> $context
+     * @return array<string, mixed>
+     *
+     * @throws \RuntimeException
+     */
+    public function resolveSelectedRate(
+        string $rateUuid,
+        array $context
+    ): array {
+        $rate = $this->findApplicableRate(
+            $rateUuid,
+            $context
+        );
+
+        if (!$rate) {
+            throw new \RuntimeException(
+                'Selected shipping method is no longer available.'
+            );
+        }
+
+        $orderAmount = (float) ($context['order_amount'] ?? 0);
+
+        $weight = (float) ($context['weight'] ?? 0);
+
+        /*
+        * IMPORTANT:
+        *
+        * Never trust shipping amount sent by frontend.
+        *
+        * Calculate again from database configuration.
+        */
+        $shippingAmount = $this->calculateRate(
+            $rate,
+            $orderAmount,
+            $weight
+        );
+
+        $method = $rate->method;
+
+        return [
+            'uuid' => $rate->uuid,
+
+            'method' => [
+                'uuid' => $method->uuid,
+                'name' => $method->name,
+                'code' => $method->code,
+            ],
+
+            'amount' => round($shippingAmount, 2),
+
+            'currency' => 'INR',
+
+            'estimated_days' => [
+                'min' => $method->min_delivery_days,
+                'max' => $method->max_delivery_days,
+            ],
+
+            'is_free' => $shippingAmount <= 0,
+        ];
+    }
+
+    /**
+     * Find a shipping rate that is currently applicable.
+     *
+     * Validates:
+     *
+     * - Rate UUID
+     * - Rate active status
+     * - Shipping zone
+     * - Country
+     * - State
+     * - Postal code
+     * - Order amount
+     * - Weight
+     *
+     * @param string $rateUuid
+     * @param array<string, mixed> $context
+     * @return ShippingRate|null
+     */
+    private function findApplicableRate(
+        string $rateUuid,
+        array $context
+    ): ?ShippingRate {
+        $countryCode = strtoupper(
+            trim((string) ($context['country_code'] ?? ''))
+        );
+
+        $stateCode = strtoupper(
+            trim((string) ($context['state_code'] ?? ''))
+        );
+
+        $postalCode = trim(
+            (string) ($context['postal_code'] ?? '')
+        );
+
+        $orderAmount = (float) (
+            $context['order_amount'] ?? 0
+        );
+
+        $weight = (float) (
+            $context['weight'] ?? 0
+        );
+
+        /*
+        * ---------------------------------------------------------
+        * 1. Find selected active rate
+        * ---------------------------------------------------------
+        */
+
+        $rate = ShippingRate::query()
+            ->with('method')
+            ->where('uuid', $rateUuid)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$rate) {
+            return null;
+        }
+
+        /*
+        * ---------------------------------------------------------
+        * 2. Validate shipping method
+        * ---------------------------------------------------------
+        */
+
+        if (!$rate->method) {
+            return null;
+        }
+
+        if (!$rate->method->is_active) {
+            return null;
+        }
+
+        /*
+        * ---------------------------------------------------------
+        * 3. Find rate's shipping zone
+        * ---------------------------------------------------------
+        */
+
+        $zone = ShippingZone::query()
+            ->where('id', $rate->shipping_zone_id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$zone) {
+            return null;
+        }
+
+        /*
+        * ---------------------------------------------------------
+        * 4. Validate destination against zone
+        * ---------------------------------------------------------
+        */
+
+        if (!$this->zoneMatches(
+            $zone,
+            $countryCode,
+            $stateCode,
+            $postalCode
+        )) {
+            return null;
+        }
+
+        /*
+        * ---------------------------------------------------------
+        * 5. Validate weight range
+        * ---------------------------------------------------------
+        */
+
+        if (
+            $rate->min_weight !== null &&
+            $weight < (float) $rate->min_weight
+        ) {
+            return null;
+        }
+
+        if (
+            $rate->max_weight !== null &&
+            $weight > (float) $rate->max_weight
+        ) {
+            return null;
+        }
+
+        /*
+        * ---------------------------------------------------------
+        * 6. Validate order amount range
+        * ---------------------------------------------------------
+        */
+
+        if (
+            $rate->min_order_amount !== null &&
+            $orderAmount < (float) $rate->min_order_amount
+        ) {
+            return null;
+        }
+
+        if (
+            $rate->max_order_amount !== null &&
+            $orderAmount > (float) $rate->max_order_amount
+        ) {
+            return null;
+        }
+
+        /*
+        * ---------------------------------------------------------
+        * 7. Everything is valid.
+        * ---------------------------------------------------------
+        */
+
+        return $rate;
+    }
+
+
 }
