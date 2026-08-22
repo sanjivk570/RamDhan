@@ -6,6 +6,7 @@ namespace App\Modules\Customer\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Modules\Customer\Resources\CustomerAddressResource;
 
 class CustomerResource extends JsonResource
 {
@@ -29,6 +30,10 @@ class CustomerResource extends JsonResource
             "mobile" => $this->mobile,
 
             "avatar" => $this->avatar,
+
+            'addresses' => CustomerAddressResource::collection(
+                $this->whenLoaded('addresses')
+            ),
 
             "is_active" => $this->is_active,
 
