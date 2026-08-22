@@ -9,6 +9,16 @@ use App\Modules\ProductVariant\Models\ProductVariant;
 use Illuminate\Support\Str;
 final class WishlistService
 {
+    public function __construct(
+        private readonly \App\Modules\Wishlist\Repositories\WishlistRepository $repository
+    ) {
+    }
+
+    public function listAdmin(array $filters)
+    {
+        return $this->repository->paginate($filters);
+    }
+
     public function list(int $customerId)
     {
         return Wishlist::where("customer_id", $customerId)

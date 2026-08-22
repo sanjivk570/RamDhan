@@ -8,8 +8,8 @@ use App\Core\Responses\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Modules\Cart\Actions\AdminListCartsAction;
 use App\Modules\Cart\Actions\AdminShowCartAction;
+use App\Modules\Cart\Requests\CartListRequest;
 use App\Modules\Cart\Resources\CartResource;
-use Illuminate\Http\Request;
 
 /** Administrative cart inspection endpoints. */
 final class CartController extends Controller
@@ -19,9 +19,9 @@ final class CartController extends Controller
         private readonly AdminShowCartAction $showCartAction,
     ) {}
 
-    public function index(Request $request)
+    public function index(CartListRequest $request)
     {
-        $carts = $this->listCartsAction->execute($request->all());
+        $carts = $this->listCartsAction->execute($request->validated());
 
         return ApiResponse::paginated(
             $carts,

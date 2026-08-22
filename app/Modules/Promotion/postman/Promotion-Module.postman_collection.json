@@ -1,0 +1,145 @@
+{
+  "info": {
+    "name": "RamDhan - Promotion (Coupon) Module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://dev.ramdhan.in" },
+    { "key": "token", "value": "YOUR_ADMIN_TOKEN" },
+    { "key": "customer_token", "value": "YOUR_CUSTOMER_TOKEN" },
+    { "key": "coupon_uuid", "value": "COUPON_UUID" },
+    { "key": "coupon_code", "value": "SAVE10" },
+    { "key": "guest_token", "value": "YOUR_GUEST_TOKEN" }
+  ],
+  "item": [
+    {
+      "name": "Admin Coupons",
+      "item": [
+        {
+          "name": "List Coupons + Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/coupons?page=1&per_page=20&sort_by=created_at&sort_order=desc&search=SAVE&filters[discount_type]=percentage&filters[is_active]=true&filters[from_date]=2026-08-01&filters[to_date]=2026-08-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "coupons"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "sort_by", "value": "created_at" },
+                { "key": "sort_order", "value": "desc" },
+                { "key": "search", "value": "SAVE" },
+                { "key": "filters[discount_type]", "value": "percentage" },
+                { "key": "filters[is_active]", "value": "true" },
+                { "key": "filters[from_date]", "value": "2026-08-01" },
+                { "key": "filters[to_date]", "value": "2026-08-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE10\",\n  \"name\": \"Flat 10% Off\",\n  \"discount_type\": \"percentage\",\n  \"discount_value\": 10,\n  \"maximum_discount\": 500,\n  \"minimum_order_amount\": 499,\n  \"usage_limit\": 1000,\n  \"per_customer_limit\": 1,\n  \"starts_at\": \"2026-08-01T00:00:00\",\n  \"ends_at\": \"2026-08-31T23:59:59\",\n  \"is_active\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/coupons",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "coupons"]
+            }
+          }
+        },
+        {
+          "name": "Update Coupon",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maximum_discount\": 750,\n  \"is_active\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/coupons/{{coupon_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "coupons", "{{coupon_uuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Coupon",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/coupons/{{coupon_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "coupons", "{{coupon_uuid}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Storefront Coupon",
+      "item": [
+        {
+          "name": "Apply Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Guest-Token", "value": "{{guest_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{coupon_code}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart/coupon",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cart", "coupon"]
+            }
+          }
+        },
+        {
+          "name": "Remove Coupon",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "X-Guest-Token", "value": "{{guest_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart/coupon",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cart", "coupon"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payment\Actions;
 
-use App\Modules\Payment\Models\PaymentTransaction;
+use App\Modules\Payment\Services\PaymentService;
 
 /**
  * Application action for AdminListPaymentTransactionsAction.
@@ -13,8 +13,10 @@ use App\Modules\Payment\Models\PaymentTransaction;
  */
 final class AdminListPaymentTransactionsAction
 {
+    public function __construct(private readonly PaymentService $service) {}
+
     public function execute(array $filters)
     {
-        return PaymentTransaction::query()->latest()->paginate($filters['per_page'] ?? 20);
+        return $this->service->listTransactions($filters);
     }
 }

@@ -12,6 +12,7 @@ use App\Modules\Shipment\Actions\CreateShipmentAction;
 use App\Modules\Shipment\Actions\ShipShipmentAction;
 use App\Modules\Shipment\Actions\UpdateShipmentAction;
 use App\Modules\Shipment\Requests\CreateShipmentRequest;
+use App\Modules\Shipment\Requests\ShipmentListRequest;
 use App\Modules\Shipment\Requests\UpdateShipmentRequest;
 use App\Modules\Shipment\Resources\ShipmentResource;
 use Illuminate\Http\Request;
@@ -27,9 +28,9 @@ final class ShipmentController extends Controller
         private readonly ShipShipmentAction $shipAction,
     ) {}
 
-    public function index(Request $request)
+    public function index(ShipmentListRequest $request)
     {
-        $shipments = $this->listAction->execute($request->all());
+        $shipments = $this->listAction->execute($request->validated());
 
         return ApiResponse::paginated(
             $shipments,

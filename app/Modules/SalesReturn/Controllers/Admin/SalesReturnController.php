@@ -10,6 +10,7 @@ use App\Modules\SalesReturn\Actions\AdminListReturnsAction;
 use App\Modules\SalesReturn\Actions\ProcessSalesReturnAction;
 use App\Modules\SalesReturn\Models\SalesReturn;
 use App\Modules\SalesReturn\Requests\ProcessSalesReturnRequest;
+use App\Modules\SalesReturn\Requests\SalesReturnListRequest;
 use App\Modules\SalesReturn\Resources\SalesReturnResource;
 use Illuminate\Http\Request;
 
@@ -21,9 +22,9 @@ final class SalesReturnController extends Controller
         private readonly ProcessSalesReturnAction $processAction,
     ) {}
 
-    public function index(Request $request)
+    public function index(SalesReturnListRequest $request)
     {
-        $returns = $this->listAction->execute($request->all());
+        $returns = $this->listAction->execute($request->validated());
 
         return ApiResponse::paginated(
             $returns,

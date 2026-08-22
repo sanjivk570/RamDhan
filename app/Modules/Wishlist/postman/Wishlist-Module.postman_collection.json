@@ -1,0 +1,104 @@
+{
+  "info": {
+    "name": "RamDhan - Wishlist Module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://dev.ramdhan.in" },
+    { "key": "token", "value": "YOUR_ADMIN_TOKEN" },
+    { "key": "customer_token", "value": "YOUR_CUSTOMER_TOKEN" },
+    { "key": "customer_id", "value": "1" },
+    { "key": "product_uuid", "value": "PRODUCT_UUID" },
+    { "key": "variant_uuid", "value": "VARIANT_UUID" },
+    { "key": "wishlist_uuid", "value": "WISHLIST_UUID" }
+  ],
+  "item": [
+    {
+      "name": "Admin Wishlist",
+      "item": [
+        {
+          "name": "List Wishlist Records + Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/wishlists?page=1&per_page=20&sort_by=created_at&sort_order=desc&search=premium&filters[customer_id]=1&filters[product_id]=5&filters[from_date]=2026-08-01&filters[to_date]=2026-08-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "wishlists"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "sort_by", "value": "created_at" },
+                { "key": "sort_order", "value": "desc" },
+                { "key": "search", "value": "premium" },
+                { "key": "filters[customer_id]", "value": "1" },
+                { "key": "filters[product_id]", "value": "5" },
+                { "key": "filters[from_date]", "value": "2026-08-01" },
+                { "key": "filters[to_date]", "value": "2026-08-31" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Wishlist",
+      "item": [
+        {
+          "name": "My Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wishlist",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "wishlist"]
+            }
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_uuid\": \"{{product_uuid}}\",\n  \"variant_uuid\": \"{{variant_uuid}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/wishlist",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "wishlist"]
+            }
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wishlist/{{wishlist_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "wishlist", "{{wishlist_uuid}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

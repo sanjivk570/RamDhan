@@ -1,0 +1,232 @@
+{
+  "info": {
+    "name": "RamDhan - Order Module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://dev.ramdhan.in" },
+    { "key": "token", "value": "YOUR_ADMIN_TOKEN" },
+    { "key": "customer_token", "value": "YOUR_CUSTOMER_TOKEN" },
+    { "key": "guest_token", "value": "YOUR_GUEST_TOKEN" },
+    { "key": "order_uuid", "value": "ORDER_UUID" },
+    { "key": "order_number", "value": "ORD-202608-000001" }
+  ],
+  "item": [
+    {
+      "name": "Admin Orders",
+      "item": [
+        {
+          "name": "List Orders + Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/orders?page=1&per_page=20&sort_by=placed_at&sort_order=desc&search=ORD-&filters[status]=confirmed&filters[payment_status]=paid&filters[fulfillment_status]=unfulfilled&filters[customer_id]=1&filters[payment_method]=cod&filters[min_total]=100&filters[max_total]=10000&filters[from_date]=2026-08-01&filters[to_date]=2026-08-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "sort_by", "value": "placed_at" },
+                { "key": "sort_order", "value": "desc" },
+                { "key": "search", "value": "ORD-" },
+                { "key": "filters[status]", "value": "confirmed" },
+                { "key": "filters[payment_status]", "value": "paid" },
+                { "key": "filters[fulfillment_status]", "value": "unfulfilled" },
+                { "key": "filters[customer_id]", "value": "1" },
+                { "key": "filters[payment_method]", "value": "cod" },
+                { "key": "filters[min_total]", "value": "100" },
+                { "key": "filters[max_total]", "value": "10000" },
+                { "key": "filters[from_date]", "value": "2026-08-01" },
+                { "key": "filters[to_date]", "value": "2026-08-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Show Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/orders/{{order_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "orders", "{{order_uuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Order Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/orders/{{order_uuid}}/summary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "orders", "{{order_uuid}}", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Change Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"processing\",\n  \"note\": \"Order confirmed by admin\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/orders/{{order_uuid}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "orders", "{{order_uuid}}", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer / Guest Orders",
+      "item": [
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Guest-Token", "value": "{{guest_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"phone\": \"9876543210\",\n  \"shipping_address\": {\n    \"street\": \"MG Road\",\n    \"city\": \"New Delhi\",\n    \"state\": \"DL\",\n    \"postal_code\": \"110001\",\n    \"country\": \"IN\"\n  },\n  \"payment_method\": \"cod\",\n  \"customer_note\": \"Leave at the gate\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Checkout Preview",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "X-Guest-Token", "value": "{{guest_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/checkout/preview",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "checkout", "preview"]
+            }
+          }
+        },
+        {
+          "name": "My Orders (customer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders?page=1&per_page=20&sort_by=created_at&sort_order=desc&filters[status]=confirmed",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "sort_by", "value": "created_at" },
+                { "key": "sort_order", "value": "desc" },
+                { "key": "filters[status]", "value": "confirmed" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Order / Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_uuid}}/summary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "{{order_uuid}}", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Order (customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Changed my mind\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_uuid}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "{{order_uuid}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Guest Order Lookup",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "X-Guest-Token", "value": "{{guest_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/guest/orders/{{order_number}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guest", "orders", "{{order_number}}"]
+            }
+          }
+        },
+        {
+          "name": "Guest Order Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "X-Guest-Token", "value": "{{guest_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/guest/orders/{{order_number}}/summary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guest", "orders", "{{order_number}}", "summary"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

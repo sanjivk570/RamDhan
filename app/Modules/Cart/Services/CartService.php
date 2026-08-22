@@ -12,6 +12,22 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 final class CartService
 {
+    public function __construct(
+        private readonly \App\Modules\Cart\Repositories\CartRepository $repository
+    ) {
+    }
+
+    /**
+     * Retrieve a paginated list of carts for admin purposes.
+     *
+     * @param array<string, mixed> $filters The filter criteria.
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function listAdmin(array $filters)
+    {
+        return $this->repository->paginate($filters);
+    }
+
     public function get(?int $customerId, ?string $guestToken): Cart
     {
         $q = Cart::with("items");
@@ -185,5 +201,15 @@ final class CartService
             $guestCart->update(["status" => Cart::MERGED]);
             return $this->recalculate($customerCart->fresh("items"));
         });
+    }
+
+    public function findByUuidOrFail(string $uuid): Cart
+    {
+        return $this->repository->findByUuidOrFail($uuid);
+    }
+
+    public function changeStatus(Cart $cart, string $status): Cart
+    {
+        return $this->repository->changeStatus($cart, $status);
     }
 }

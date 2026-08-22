@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Cart\Actions;
 
-use App\Modules\Cart\Models\Cart;
+use App\Modules\Cart\Services\CartService;
 
 /**
  * Application action for AdminListCartsAction.
@@ -13,12 +13,10 @@ use App\Modules\Cart\Models\Cart;
  */
 final class AdminListCartsAction
 {
+    public function __construct(private readonly CartService $service) {}
+
     public function execute(array $filters)
     {
-        return Cart::with('items')
-            ->when($filters['customer_id'] ?? null, fn ($q, $v) => $q->where('customer_id', $v))
-            ->when($filters['status'] ?? null, fn ($q, $v) => $q->where('status', $v))
-            ->latest()
-            ->paginate($filters['per_page'] ?? 20);
+        return $this->service->listAdmin($filters);
     }
 }

@@ -11,6 +11,7 @@ use App\Modules\Promotion\Actions\CreateCouponAction;
 use App\Modules\Promotion\Actions\DeleteCouponAction;
 use App\Modules\Promotion\Actions\UpdateCouponAction;
 use App\Modules\Promotion\Models\Coupon;
+use App\Modules\Promotion\Requests\CouponListRequest;
 use App\Modules\Promotion\Resources\CouponResource;
 use Illuminate\Http\Request;
 
@@ -24,9 +25,9 @@ final class CouponController extends Controller
         private readonly DeleteCouponAction $deleteAction,
     ) {}
 
-    public function index(Request $request)
+    public function index(CouponListRequest $request)
     {
-        $coupons = $this->listAction->execute($request->all());
+        $coupons = $this->listAction->execute($request->validated());
 
         return ApiResponse::paginated(
             $coupons,

@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace App\Modules\SalesReturn\Services;
 use App\Modules\SalesReturn\Models\SalesReturn;
+use App\Modules\SalesReturn\Repositories\SalesReturnRepository;
 use App\Modules\Order\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
 final class SalesReturnService
 {
+    public function __construct(
+        private readonly SalesReturnRepository $repository
+    ) {
+    }
+
     public function create(array $data, int $customerId): SalesReturn
     {
         return DB::transaction(function () use ($data, $customerId) {
@@ -83,10 +89,7 @@ final class SalesReturnService
     }
     public function adminList(array $f)
     {
-        return SalesReturn::query()
-            ->when($f["status"] ?? null, fn($q, $v) => $q->where("status", $v))
-            ->latest()
-            ->paginate($f["per_page"] ?? 20);
+        return $this->repository->paginate($f);
     }
     public function process(
         SalesReturn $r,

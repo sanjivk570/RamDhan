@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Shipment\Services;
 use App\Modules\Shipment\Models\Shipment;
+use App\Modules\Shipment\Repositories\ShipmentRepository;
 use App\Modules\Order\Models\Order;
 use App\Modules\Order\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,10 @@ use Illuminate\Support\Str;
 use RuntimeException;
 final class ShipmentService
 {
+    public function __construct(
+        private readonly ShipmentRepository $repository
+    ) {
+    }
     public function create(array $data, int $userId): Shipment
     {
         return DB::transaction(function () use ($data, $userId) {
@@ -73,24 +78,11 @@ final class ShipmentService
     }
     public function listAdmin(array $f)
     {
-        return Shipment::query()
-            ->when($f["status"] ?? null, fn($q, $v) => $q->where("status", $v))
-            ->when(
-                $f["tracking_number"] ?? null,
-                fn($q, $v) => $q->where(
-                    "tracking_number",
-                    "like",
-                    "%" . $v . "%"
-                )
-            )
-            ->latest()
-            ->paginate($f["per_page"] ?? 20);
+        return $this->repository->paginate($f);
     }
     public function showAdmin(string $uuid): Shipment
     {
-        return Shipment::with("items")
-            ->where("uuid", $uuid)
-            ->firstOrFail();
+        return $this->repository->findByUuidOrFail($uuid);
     }
     public function ship(Shipment $s): Shipment
     {

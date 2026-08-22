@@ -7,6 +7,7 @@ use App\Modules\Payment\Contracts\PaymentGatewayContract;
 use App\Modules\Payment\Models\PaymentIntent;
 use App\Modules\Payment\Models\PaymentTransaction;
 use App\Modules\Payment\Models\PaymentRefund;
+use App\Modules\Payment\Repositories\PaymentRepository;
 use App\Modules\Order\Models\Order;
 use App\Modules\SalesInvoice\Models\SalesInvoice;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +16,21 @@ use RuntimeException;
 final class PaymentService
 {
     public function __construct(
-        private readonly PaymentGatewayContract $gateway
+        private readonly PaymentGatewayContract $gateway,
+        private readonly PaymentRepository $repository
     ) {
     }
+    /**
+     * Retrieve a paginated list of payment transactions.
+     *
+     * @param array<string, mixed> $filters The filter criteria.
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function listTransactions(array $filters)
+    {
+        return $this->repository->paginateTransactions($filters);
+    }
+
     public function createIntent(
         Order $order,
         string $provider,

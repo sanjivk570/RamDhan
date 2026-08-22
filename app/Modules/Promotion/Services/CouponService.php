@@ -4,10 +4,27 @@ declare(strict_types=1);
 
 namespace App\Modules\Promotion\Services;
 use App\Modules\Promotion\Models\Coupon;
+use App\Modules\Promotion\Repositories\CouponRepository;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 final class CouponService
 {
+    public function __construct(
+        private readonly CouponRepository $repository
+    ) {
+    }
+
+    /**
+     * Retrieve a paginated list of coupons.
+     *
+     * @param array<string, mixed> $filters The filter criteria.
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function list(array $filters)
+    {
+        return $this->repository->paginate($filters);
+    }
+
     public function validate(
         string $code,
         float $subtotal,

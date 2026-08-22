@@ -10,6 +10,7 @@ use App\Modules\Order\Models\Order;
 use App\Modules\SalesInvoice\Actions\AdminListInvoicesAction;
 use App\Modules\SalesInvoice\Actions\AdminShowInvoiceAction;
 use App\Modules\SalesInvoice\Actions\GenerateInvoiceAction;
+use App\Modules\SalesInvoice\Requests\SalesInvoiceListRequest;
 use App\Modules\SalesInvoice\Resources\SalesInvoiceResource;
 use Illuminate\Http\Request;
 
@@ -22,9 +23,9 @@ final class SalesInvoiceController extends Controller
         private readonly GenerateInvoiceAction $generateAction,
     ) {}
 
-    public function index(Request $request)
+    public function index(SalesInvoiceListRequest $request)
     {
-        $invoices = $this->listAction->execute($request->all());
+        $invoices = $this->listAction->execute($request->validated());
 
         return ApiResponse::paginated(
             $invoices,

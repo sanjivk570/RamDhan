@@ -6,7 +6,9 @@ namespace App\Modules\Order\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use App\Modules\Customer\Models\Customer;
 final class Order extends Model
 {
     use SoftDeletes;
@@ -84,5 +86,10 @@ final class Order extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 }

@@ -1,0 +1,125 @@
+{
+  "info": {
+    "name": "RamDhan - SalesReturn Module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://dev.ramdhan.in" },
+    { "key": "token", "value": "YOUR_ADMIN_TOKEN" },
+    { "key": "customer_token", "value": "YOUR_CUSTOMER_TOKEN" },
+    { "key": "return_uuid", "value": "RETURN_UUID" },
+    { "key": "order_uuid", "value": "ORDER_UUID" },
+    { "key": "order_item_uuid", "value": "ORDER_ITEM_UUID" }
+  ],
+  "item": [
+    {
+      "name": "Admin Returns",
+      "item": [
+        {
+          "name": "List Returns + Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/returns?page=1&per_page=20&sort_by=created_at&sort_order=desc&search=RET-&filters[status]=approved&filters[refund_status]=pending&filters[customer_id]=1&filters[from_date]=2026-08-01&filters[to_date]=2026-08-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "returns"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "sort_by", "value": "created_at" },
+                { "key": "sort_order", "value": "desc" },
+                { "key": "search", "value": "RET-" },
+                { "key": "filters[status]", "value": "approved" },
+                { "key": "filters[refund_status]", "value": "pending" },
+                { "key": "filters[customer_id]", "value": "1" },
+                { "key": "filters[from_date]", "value": "2026-08-01" },
+                { "key": "filters[to_date]", "value": "2026-08-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Process Return (approve / reject / receive)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"approve\",\n  \"admin_note\": \"Return approved for quality check\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/returns/{{return_uuid}}/process",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "returns", "{{return_uuid}}", "process"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Returns",
+      "item": [
+        {
+          "name": "My Returns",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/returns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "returns"]
+            }
+          }
+        },
+        {
+          "name": "Create Return Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_uuid\": \"{{order_uuid}}\",\n  \"reason\": \"Product damaged\",\n  \"customer_note\": \"Item received in broken condition\",\n  \"items\": [\n    {\n      \"order_item_uuid\": \"{{order_item_uuid}}\",\n      \"quantity\": 1,\n      \"reason\": \"Damaged\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/returns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "returns"]
+            }
+          }
+        },
+        {
+          "name": "Show Return",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/returns/{{return_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "returns", "{{return_uuid}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

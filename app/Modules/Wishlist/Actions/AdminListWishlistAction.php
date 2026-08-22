@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Wishlist\Actions;
 
-use App\Modules\Wishlist\Models\Wishlist;
+use App\Modules\Wishlist\Services\WishlistService;
 
 /**
  * Application action for AdminListWishlistAction.
@@ -13,14 +13,10 @@ use App\Modules\Wishlist\Models\Wishlist;
  */
 final class AdminListWishlistAction
 {
+    public function __construct(private readonly WishlistService $service) {}
+
     public function execute(array $filters)
     {
-        return Wishlist::query()
-            ->when(
-                $filters["customer_id"] ?? null,
-                fn($q, $v) => $q->where("customer_id", $v)
-            )
-            ->latest()
-            ->paginate($filters["per_page"] ?? 20);
+        return $this->service->listAdmin($filters);
     }
 }

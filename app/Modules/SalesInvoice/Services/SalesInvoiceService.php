@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Modules\SalesInvoice\Services;
 use App\Modules\SalesInvoice\Models\SalesInvoice;
+use App\Modules\SalesInvoice\Repositories\SalesInvoiceRepository;
 use App\Modules\Order\Models\Order;
 use Illuminate\Support\Facades\DB;
 final class SalesInvoiceService
 {
+    public function __construct(
+        private readonly SalesInvoiceRepository $repository
+    ) {
+    }
+
     public function createForOrder(Order $order): SalesInvoice
     {
         return DB::transaction(function () use ($order) {
@@ -73,15 +79,10 @@ final class SalesInvoiceService
     }
     public function adminList(array $f)
     {
-        return SalesInvoice::query()
-            ->when($f["status"] ?? null, fn($q, $v) => $q->where("status", $v))
-            ->latest()
-            ->paginate($f["per_page"] ?? 20);
+        return $this->repository->paginate($f);
     }
     public function adminShow(string $uuid): SalesInvoice
     {
-        return SalesInvoice::with("items")
-            ->where("uuid", $uuid)
-            ->firstOrFail();
+        return $this->repository->findByUuidOrFail($uuid);
     }
 }

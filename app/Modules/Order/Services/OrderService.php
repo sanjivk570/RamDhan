@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Order\Services;
 use App\Modules\Order\Models\Order;
+use App\Modules\Order\Repositories\OrderRepository;
 use App\Modules\Cart\Services\CartService;
 use App\Modules\Customer\Models\Customer;
 use App\Modules\Customer\Models\CustomerAddress;
@@ -20,7 +21,8 @@ final class OrderService
     public function __construct(
         private readonly CartService $cartService,
         private readonly CouponService $couponService,
-        private readonly SalesInvoiceService $invoiceService
+        private readonly SalesInvoiceService $invoiceService,
+        private readonly OrderRepository $repository
     ) {
     }
     public function checkout(array $data, ?Customer $customer): Order
@@ -208,20 +210,11 @@ final class OrderService
     }
     public function listForCustomer(int $customerId, array $filters)
     {
-        return Order::where("customer_id", $customerId)
-            ->when(
-                $filters["status"] ?? null,
-                fn($q, $v) => $q->where("status", $v)
-            )
-            ->latest()
-            ->paginate($filters["per_page"] ?? 20);
+        return $this->repository->paginateForCustomer($customerId, $filters);
     }
     public function showForCustomer(int $customerId, string $uuid): Order
     {
-        return Order::with("items", "histories")
-            ->where("customer_id", $customerId)
-            ->where("uuid", $uuid)
-            ->firstOrFail();
+        return $this->repository->findByCustomerUuidOrFail($customerId, $uuid);
     }
     public function guestShow(string $orderNumber, ?string $guestToken): Order
     {
@@ -326,40 +319,11 @@ final class OrderService
     }
     public function adminList(array $f)
     {
-        return Order::query()
-            ->when(
-                $f["search"] ?? null,
-                fn($q, $s) => $q->where(
-                    fn($x) => $x
-                        ->where("order_number", "like", "%" . $s . "%")
-                        ->orWhere("customer_email", "like", "%" . $s . "%")
-                )
-            )
-            ->when($f["status"] ?? null, fn($q, $v) => $q->where("status", $v))
-            ->when(
-                $f["payment_status"] ?? null,
-                fn($q, $v) => $q->where("payment_status", $v)
-            )
-            ->when(
-                $f["fulfillment_status"] ?? null,
-                fn($q, $v) => $q->where("fulfillment_status", $v)
-            )
-            ->when(
-                $f["from_date"] ?? null,
-                fn($q, $v) => $q->whereDate("created_at", ">=", $v)
-            )
-            ->when(
-                $f["to_date"] ?? null,
-                fn($q, $v) => $q->whereDate("created_at", "<=", $v)
-            )
-            ->orderBy($f["sort_by"] ?? "created_at", $f["sort_order"] ?? "desc")
-            ->paginate($f["per_page"] ?? 20);
+        return $this->repository->paginate($f);
     }
     public function adminShow(string $uuid): Order
     {
-        return Order::with("items", "histories")
-            ->where("uuid", $uuid)
-            ->firstOrFail();
+        return $this->repository->findByUuidOrFail($uuid);
     }
 
     public function adminSummary(string $uuid): array

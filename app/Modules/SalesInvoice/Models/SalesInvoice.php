@@ -6,7 +6,10 @@ namespace App\Modules\SalesInvoice\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use App\Modules\Order\Models\Order;
+use App\Modules\Customer\Models\Customer;
 final class SalesInvoice extends Model
 {
     use SoftDeletes;
@@ -62,5 +65,15 @@ final class SalesInvoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SalesInvoiceItem::class);
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'order_id');
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 }

@@ -1,0 +1,158 @@
+{
+  "info": {
+    "name": "RamDhan - Shipment Module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://dev.ramdhan.in" },
+    { "key": "token", "value": "YOUR_ADMIN_TOKEN" },
+    { "key": "customer_token", "value": "YOUR_CUSTOMER_TOKEN" },
+    { "key": "shipment_uuid", "value": "SHIPMENT_UUID" },
+    { "key": "order_uuid", "value": "ORDER_UUID" },
+    { "key": "order_item_uuid", "value": "ORDER_ITEM_UUID" }
+  ],
+  "item": [
+    {
+      "name": "Admin Shipments",
+      "item": [
+        {
+          "name": "List Shipments + Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/shipments?page=1&per_page=20&sort_by=created_at&sort_order=desc&search=SHP-&filters[status]=shipped&filters[carrier]=delhivery&filters[order_id]=1&filters[customer_id]=2&filters[shipped_from]=2026-08-01&filters[shipped_to]=2026-08-31&filters[from_date]=2026-08-01&filters[to_date]=2026-08-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "shipments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "sort_by", "value": "created_at" },
+                { "key": "sort_order", "value": "desc" },
+                { "key": "search", "value": "SHP-" },
+                { "key": "filters[status]", "value": "shipped" },
+                { "key": "filters[carrier]", "value": "delhivery" },
+                { "key": "filters[order_id]", "value": "1" },
+                { "key": "filters[customer_id]", "value": "2" },
+                { "key": "filters[shipped_from]", "value": "2026-08-01" },
+                { "key": "filters[shipped_to]", "value": "2026-08-31" },
+                { "key": "filters[from_date]", "value": "2026-08-01" },
+                { "key": "filters[to_date]", "value": "2026-08-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Show Shipment",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/shipments/{{shipment_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "shipments", "{{shipment_uuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Shipment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_uuid\": \"{{order_uuid}}\",\n  \"carrier\": \"delhivery\",\n  \"service\": \"Surface\",\n  \"tracking_number\": \"DL123456789\",\n  \"notes\": \"Handle with care\",\n  \"items\": [\n    {\n      \"order_item_uuid\": \"{{order_item_uuid}}\",\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/shipments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "shipments"]
+            }
+          }
+        },
+        {
+          "name": "Update Shipment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tracking_number\": \"DL987654321\",\n  \"tracking_url\": \"https://delhivery.com/track/DL987654321\",\n  \"notes\": \"Carrier assigned\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/shipments/{{shipment_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "shipments", "{{shipment_uuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Ship (post) Shipment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/shipments/{{shipment_uuid}}/ship",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "shipments", "{{shipment_uuid}}", "ship"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Shipments",
+      "item": [
+        {
+          "name": "My Shipments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/shipments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "shipments"]
+            }
+          }
+        },
+        {
+          "name": "Track Shipment",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/shipments/{{shipment_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "shipments", "{{shipment_uuid}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

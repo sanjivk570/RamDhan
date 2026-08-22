@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Order\Models\Order;
 use App\Modules\Payment\Actions\AdminListPaymentTransactionsAction;
 use App\Modules\Payment\Actions\RefundPaymentAction;
+use App\Modules\Payment\Requests\PaymentTransactionListRequest;
 use App\Modules\Payment\Resources\PaymentTransactionResource;
 use Illuminate\Http\Request;
 
@@ -20,9 +21,9 @@ final class PaymentController extends Controller
         private readonly RefundPaymentAction $refundAction,
     ) {}
 
-    public function transactions(Request $request)
+    public function transactions(PaymentTransactionListRequest $request)
     {
-        $transactions = $this->transactionsAction->execute($request->all());
+        $transactions = $this->transactionsAction->execute($request->validated());
 
         return ApiResponse::paginated(
             $transactions,

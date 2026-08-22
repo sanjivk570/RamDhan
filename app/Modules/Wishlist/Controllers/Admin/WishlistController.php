@@ -8,17 +8,17 @@ use App\Core\Responses\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Modules\Wishlist\Actions\AdminListWishlistAction;
 use App\Modules\Wishlist\Models\Wishlist;
+use App\Modules\Wishlist\Requests\WishlistListRequest;
 use App\Modules\Wishlist\Resources\WishlistResource;
-use Illuminate\Http\Request;
 
 /** Administrative wishlist inspection endpoints. */
 final class WishlistController extends Controller
 {
     public function __construct(private readonly AdminListWishlistAction $listAction) {}
 
-    public function index(Request $request)
+    public function index(WishlistListRequest $request)
     {
-        $records = $this->listAction->execute($request->all());
+        $records = $this->listAction->execute($request->validated());
 
         return ApiResponse::paginated(
             $records,
