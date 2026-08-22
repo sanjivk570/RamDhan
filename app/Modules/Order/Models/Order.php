@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 final class Order extends Model
 {
     use SoftDeletes;
+
     public const PENDING = "pending";
     public const CONFIRMED = "confirmed";
     public const PROCESSING = "processing";
@@ -17,6 +18,7 @@ final class Order extends Model
     public const DELIVERED = "delivered";
     public const CANCELLED = "cancelled";
     public const COMPLETED = "completed";
+
     protected $fillable = [
         "uuid",
         "order_number",

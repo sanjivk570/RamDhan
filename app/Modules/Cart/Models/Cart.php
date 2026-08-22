@@ -3,13 +3,22 @@
 declare(strict_types=1);
 
 namespace App\Modules\Cart\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Modules\Customer\Models\Customer;
+
 final class Cart extends Model
 {
     use SoftDeletes;
+
+    public const ACTIVE = "active";
+    public const CONVERTED = "converted";
+    public const MERGED = "merged";
+
     protected $fillable = [
         "uuid",
         "customer_id",
@@ -42,5 +51,10 @@ final class Cart extends Model
     public function items(): HasMany
     {
         return $this->hasMany(CartItem::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, "customer_id");
     }
 }

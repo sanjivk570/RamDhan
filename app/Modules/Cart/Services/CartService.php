@@ -16,13 +16,13 @@ final class CartService
     {
         $q = Cart::with("items");
         if ($customerId) {
-            $q->where("customer_id", $customerId)->where("status", "active");
+            $q->where("customer_id", $customerId)->where("status", Cart::ACTIVE);
         } elseif ($guestToken) {
-            $q->where("guest_token", $guestToken)->where("status", "active");
+            $q->where("guest_token", $guestToken)->where("status", Cart::ACTIVE);
         } else {
             $cart = Cart::create([
                 "guest_token" => (string) Str::uuid(),
-                "status" => "active",
+                "status" => Cart::ACTIVE,
             ]);
             return $cart->load("items");
         }
@@ -30,7 +30,7 @@ final class CartService
             Cart::create([
                 "customer_id" => $customerId,
                 "guest_token" => $customerId ? null : $guestToken,
-                "status" => "active",
+                "status" => Cart::ACTIVE,
             ]);
     }
     public function add(
@@ -142,7 +142,7 @@ final class CartService
                 ->lockForUpdate()
                 ->first();
 
-            if ($guestCart->status !== "active") {
+            if ($guestCart->status !== Cart::ACTIVE) {
                 throw new RuntimeException("Guest cart is no longer active.");
             }
 
@@ -182,7 +182,7 @@ final class CartService
                 }
             }
 
-            $guestCart->update(["status" => "merged"]);
+            $guestCart->update(["status" => Cart::MERGED]);
             return $this->recalculate($customerCart->fresh("items"));
         });
     }

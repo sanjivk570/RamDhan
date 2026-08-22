@@ -99,6 +99,9 @@ enum PermissionEnum: string
     case PURCHASE_RETURN_CREATE = 'purchase.return.create';
     case PURCHASE_RETURN_POST = 'purchase.return.post';
 
+    //for cart
+    case CART_VIEW = "cart.view";
+
     //For order
     case ORDER_VIEW = 'order.view';
     case ORDER_UPDATE = 'order.update';

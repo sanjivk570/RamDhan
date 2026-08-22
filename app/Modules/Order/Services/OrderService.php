@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use RuntimeException;
+use App\Modules\Cart\Models\Cart;
+
 final class OrderService
 {
     public function __construct(
@@ -136,7 +138,7 @@ final class OrderService
                 );
             }
             $this->invoiceService->createForOrder($order->load("items"));
-            $cart->update(["status" => "converted"]);
+            $cart->update(["status" => Cart::CONVERTED]);
             return $order->load("items", "histories");
         });
     }
