@@ -35,6 +35,34 @@ class CategoryService
         );
     }
 
+    /**
+     * Retrieve paginated active categories for the storefront (public catalog).
+     *
+     * @param array<string, mixed> $filters
+     * @return LengthAwarePaginator
+     */
+    public function storefrontList(
+        array $filters = []
+    ): LengthAwarePaginator {
+
+        return $this->repository->paginateActive(
+            $filters
+        );
+    }
+
+    /**
+     * Retrieve an active (published) category by UUID for the storefront.
+     *
+     * @param string $uuid
+     * @return ?Category
+     */
+    public function storefrontDetails(
+        string $uuid
+    ): ?Category {
+
+        return $this->repository->findActiveByUuid($uuid);
+    }
+
     public function create(
         array $data
     ): Category {

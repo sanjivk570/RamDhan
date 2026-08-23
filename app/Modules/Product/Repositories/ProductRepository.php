@@ -151,6 +151,109 @@ class ProductRepository
     }
 
     /**
+     * Retrieve paginated active products for the storefront (public catalog).
+     *
+     * Only products that are published (is_active = true) are returned.
+     *
+     * @param array<string, mixed> $filters
+     * @return LengthAwarePaginator
+     */
+    public function paginateStorefront(array $filters): LengthAwarePaginator
+    {
+        return Product::query()
+        ->with([
+            'categories', 'images', 'unit', 'taxClass', 'inventoryStock', 'variants' => function ($query) {
+                $query->orderBy('sort_order');
+            },
+        ])
+
+            /*
+             * Storefront only exposes active products.
+             */
+            ->where('is_active', true)
+
+            /*
+             * Global Search
+             */
+            ->when(
+                $filters['search'] ?? null,
+                function ($query, $search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('sku', 'LIKE', "%{$search}%")
+                        ->orWhere('slug', 'LIKE', "%{$search}%"
+                        );
+                    });
+                }
+            )
+
+            /*
+             * Column Filters
+             */
+            ->when(
+                !empty($filters['filters']['name']),
+                function ($query) use ($filters) {
+                    $query->where('name', 'LIKE', '%' . $filters['filters']['name'] . '%');
+                }
+            )
+
+            ->when(
+                isset($filters['filters']['category']) && $filters['filters']['category'] !== '',
+                function ($query) use ($filters) {
+                    $query->whereHas('categories',
+                        function ($categoryQuery) use ($filters) {
+                            $categoryQuery->where('uuid', $filters['filters']['category']);
+                        }
+                    );
+                }
+            )
+
+            ->when(
+                isset($filters['filters']['is_featured']) && $filters['filters']['is_featured'] !== '',
+                function ($query) use ($filters) {
+                    $query->where('is_featured', (bool) $filters['filters']['is_featured']);
+                }
+            )
+
+            ->when(
+                isset($filters['filters']['min_price']) && $filters['filters']['min_price'] !== '',
+                function ($query) use ($filters) {
+                    $query->where('price', '>=', $filters['filters']['min_price']);
+                }
+            )
+
+            ->when(
+                isset($filters['filters']['max_price']) && $filters['filters']['max_price'] !== '',
+                function ($query) use ($filters) {
+                    $query->where( 'price', '<=', $filters['filters']['max_price']);
+                }
+            )
+            ->orderBy($filters['sort_by'] ?? 'created_at', $filters['sort_order'] ?? 'desc')
+
+            ->paginate($filters['per_page'] ?? 20);
+    }
+
+    /**
+     * Find an active (published) product by UUID for the storefront.
+     *
+     * @param string $uuid
+     * @return Product
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function findActiveByUuid(string $uuid): Product
+    {
+        return Product::with(['categories', 'images', 'unit', 'taxClass', 'inventoryStock', 'variants' =>
+            function ($query) {
+                $query->orderBy('sort_order');
+            },
+            ])
+            ->where('uuid', $uuid)
+            ->where('is_active', true)
+            ->firstOrFail();
+    }
+
+    /**
      * Create a new product.
      *
      * @param array<string, mixed> $data

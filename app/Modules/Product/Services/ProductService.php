@@ -58,6 +58,28 @@ class ProductService
     }
 
     /**
+     * Retrieve paginated active products for the storefront (public catalog).
+     *
+     * @param array<string, mixed> $filters
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function storefrontList(array $filters)
+    {
+        return $this->productRepository->paginateStorefront($filters);
+    }
+
+    /**
+     * Retrieve an active (published) product by UUID for the storefront.
+     *
+     * @param string $uuid
+     * @return Product
+     */
+    public function storefrontDetails(string $uuid): Product
+    {
+        return $this->productRepository->findActiveByUuid($uuid);
+    }
+
+    /**
      * Create a new product.
      *
      * Category UUIDs are resolved to category IDs

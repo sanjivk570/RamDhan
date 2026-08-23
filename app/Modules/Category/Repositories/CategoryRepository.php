@@ -180,6 +180,92 @@ class CategoryRepository
             ->first();
     }
 
+    /**
+     * Retrieve paginated active categories for the storefront.
+     *
+     * Only categories that are published (is_active = true) are returned.
+     *
+     * @param array<string, mixed> $filters
+     * @return LengthAwarePaginator
+     */
+    public function paginateActive(
+        array $filters = []
+    ): LengthAwarePaginator {
+
+        $query = Category::query()
+            ->with('parent', 'children', 'media')
+            // Storefront only exposes active categories.
+            ->where('is_active', true);
+
+        if (!empty($filters['search'])) {
+
+            $search = $filters['search'];
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where(
+                    'name',
+                    'like',
+                    "%{$search}%"
+                )
+                ->orWhere(
+                    'slug',
+                    'like',
+                    "%{$search}%"
+                );
+            });
+        }
+
+        $sortBy = $filters['sort_by'] ?? 'sort_order';
+
+        $sortOrder = $filters['sort_order'] ?? 'asc';
+
+        $allowedSorts = [
+            'name',
+            'slug',
+            'sort_order',
+            'created_at',
+        ];
+
+        if (!in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'sort_order';
+        }
+
+        if (!in_array($sortOrder, ['asc', 'desc'], true)) {
+            $sortOrder = 'asc';
+        }
+
+        $query->orderBy(
+            $sortBy,
+            $sortOrder
+        );
+
+        return $query->paginate(
+            $filters['per_page'] ?? 15
+        );
+    }
+
+    /**
+     * Find an active (published) category by UUID for the storefront.
+     *
+     * @param string $uuid
+     * @return ?Category
+     */
+    public function findActiveByUuid(
+        string $uuid
+    ): ?Category {
+
+        return Category::query()
+            ->with([
+                'parent',
+                'children',
+                'media',
+            ])
+            ->where('uuid', $uuid)
+            ->where('is_active', true)
+            ->first();
+    }
+
     public function create(
         array $data
     ): Category {

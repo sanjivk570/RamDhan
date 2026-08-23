@@ -1,0 +1,440 @@
+{
+  "info": {
+    "_postman_id": "ramdhan-frontend-storefront-collection",
+    "name": "RamDhan - Frontend Storefront API",
+    "description": "Common Postman collection for the RamDhan customer-facing (storefront) API.\n\nConsumed by: frontend web / mobile storefront.\n\nGlobal variables:\n  {{base_url}}      - e.g. http://dev.ramdhan.in\n  {{auth_token}}    - customer Bearer token (set automatically on register/login)\n  {{guest_token}}   - guest cart token (header X-Guest-Token)\n\nHeader used for guest/customer carts and orders:  X-Guest-Token: {{guest_token}}\nHeader used for authenticated customer calls:     Authorization: Bearer {{auth_token}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://dev.ramdhan.in" },
+    { "key": "auth_token", "value": "" },
+    { "key": "guest_token", "value": "" },
+    { "key": "product_uuid", "value": "<product-uuid>" },
+    { "key": "category_uuid", "value": "<category-uuid>" },
+    { "key": "cart_item_uuid", "value": "<cart-item-uuid>" },
+    { "key": "order_uuid", "value": "<order-uuid>" },
+    { "key": "orderNumber", "value": "<order-number>" },
+    { "key": "wishlist_uuid", "value": "<wishlist-uuid>" },
+    { "key": "address_uuid", "value": "<address-uuid>" },
+    { "key": "payment_intent_uuid", "value": "<payment-intent-uuid>" }
+  ],
+  "item": [
+    {
+      "name": "1. Storefront Catalog (Public)",
+      "item": [
+        {
+          "name": "Products",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/storefront/products?search=&filters[category]={{category_uuid}}&filters[is_featured]=true&filters[min_price]=0&filters[max_price]=5000&sort_by=price&sort_order=asc&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "storefront", "products"],
+              "query": [
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "filters[category]", "value": "{{category_uuid}}", "disabled": true },
+                { "key": "filters[is_featured]", "value": "true", "disabled": true },
+                { "key": "filters[min_price]", "value": "0", "disabled": true },
+                { "key": "filters[max_price]", "value": "5000", "disabled": true },
+                { "key": "sort_by", "value": "price", "disabled": true },
+                { "key": "sort_order", "value": "asc", "disabled": true },
+                { "key": "per_page", "value": "20", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Product Details",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/storefront/products/{{product_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "storefront", "products", "{{product_uuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Categories",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/storefront/categories?search=&sort_by=sort_order&sort_order=asc&per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "storefront", "categories"],
+              "query": [
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sort_by", "value": "sort_order", "disabled": true },
+                { "key": "sort_order", "value": "asc", "disabled": true },
+                { "key": "per_page", "value": "15", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Category Details",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/storefront/categories/{{category_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "storefront", "categories", "{{category_uuid}}"]
+            }
+          }
+        }
+      ]
+    },
+{
+      "name": "2. Customer Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 200) {", "    pm.collectionVariables.set('auth_token', pm.response.json().data.token);", "}", ""], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"buyer@example.com\",\n  \"password\": \"Customer@123\",\n  \"password_confirmation\": \"Customer@123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/register", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 200) {", "    pm.collectionVariables.set('auth_token', pm.response.json().data.token);", "}", ""], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"buyer@example.com\",\n  \"password\": \"Customer@123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Profile",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/profile", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "auth", "profile"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "PUT",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"first_name\": \"Johnny\",\n  \"last_name\": \"Doe\",\n  \"mobile\": \"9876543210\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/profile", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "auth", "profile"] }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"current_password\": \"Customer@123\",\n  \"new_password\": \"Customer@456\",\n  \"new_password_confirmation\": \"Customer@456\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/change-password", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "auth", "change-password"] }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"buyer@example.com\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "auth", "forgot-password"] }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"buyer@example.com\",\n  \"token\": \"<reset-token>\",\n  \"password\": \"Customer@123\",\n  \"password_confirmation\": \"Customer@123\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/reset-password", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "auth", "reset-password"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/logout", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "auth", "logout"] }
+          }
+        }
+      ]
+    },
+{
+      "name": "3. Customer Addresses",
+      "item": [
+        {
+          "name": "List Addresses",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/customer/addresses", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "addresses"] }
+          }
+        },
+        {
+          "name": "Create Address",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"label\": \"Home\",\n  \"address_line1\": \"123 Main St\",\n  \"address_line2\": \"Apt 4\",\n  \"city\": \"Mumbai\",\n  \"state\": \"MH\",\n  \"postal_code\": \"400001\",\n  \"country\": \"IN\",\n  \"is_default\": true\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/customer/addresses", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "addresses"] }
+          }
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "PUT",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"address_line1\": \"456 New St\",\n  \"city\": \"Delhi\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/customer/addresses/{{address_uuid}}", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "addresses", "{{address_uuid}}"] }
+          }
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "DELETE",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/customer/addresses/{{address_uuid}}", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "addresses", "{{address_uuid}}"] }
+          }
+        },
+        {
+          "name": "Set Default Address",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "PATCH",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/customer/addresses/{{address_uuid}}/default", "host": ["{{base_url}}"], "path": ["api", "v1", "customer", "addresses", "{{address_uuid}}", "default"] }
+          }
+        }
+      ]
+    },
+{
+      "name": "4. Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{auth_token}}", "disabled": true }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "url": { "raw": "{{base_url}}/api/v1/cart", "host": ["{{base_url}}"], "path": ["api", "v1", "cart"] }
+          }
+        },
+        {
+          "name": "Add Cart Item",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"product_uuid\": \"{{product_uuid}}\",\n  \"variant_uuid\": null,\n  \"quantity\": 1\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/cart/items", "host": ["{{base_url}}"], "path": ["api", "v1", "cart", "items"] }
+          }
+        },
+        {
+          "name": "Update Cart Item",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "body": { "mode": "raw", "raw": "{ \"quantity\": 2 }", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/cart/items/{{cart_item_uuid}}", "host": ["{{base_url}}"], "path": ["api", "v1", "cart", "items", "{{cart_item_uuid}}"] }
+          }
+        },
+        {
+          "name": "Remove Cart Item",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "url": { "raw": "{{base_url}}/api/v1/cart/items/{{cart_item_uuid}}", "host": ["{{base_url}}"], "path": ["api", "v1", "cart", "items", "{{cart_item_uuid}}"] }
+          }
+        },
+        {
+          "name": "Merge Guest Cart",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "url": { "raw": "{{base_url}}/api/v1/cart/merge", "host": ["{{base_url}}"], "path": ["api", "v1", "cart", "merge"] }
+          }
+        }
+      ]
+    },
+{
+      "name": "5. Checkout & Orders",
+      "item": [
+        {
+          "name": "Checkout Preview",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/orders/checkout/preview", "host": ["{{base_url}}"], "path": ["api", "v1", "orders", "checkout", "preview"] }
+          }
+        },
+        {
+          "name": "Checkout (Create Order)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{auth_token}}", "disabled": true }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"guest_token\": \"{{guest_token}}\",\n  \"email\": \"buyer@example.com\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"payment_method\": \"cod\",\n  \"shipping_address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Mumbai\",\n    \"state\": \"MH\",\n    \"postal_code\": \"400001\",\n    \"country\": \"IN\"\n  }\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/orders/checkout", "host": ["{{base_url}}"], "path": ["api", "v1", "orders", "checkout"] }
+          }
+        },
+        {
+          "name": "My Orders",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/orders?page=1&per_page=20", "host": ["{{base_url}}"], "path": ["api", "v1", "orders"], "query": [ { "key": "page", "value": "1", "disabled": true }, { "key": "per_page", "value": "20", "disabled": true } ] }
+          }
+        },
+        {
+          "name": "Order Details",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_uuid}}", "host": ["{{base_url}}"], "path": ["api", "v1", "orders", "{{order_uuid}}"] }
+          }
+        },
+        {
+          "name": "Order Summary",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_uuid}}/summary", "host": ["{{base_url}}"], "path": ["api", "v1", "orders", "{{order_uuid}}", "summary"] }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{ \"reason\": \"Changed my mind\" }", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_uuid}}/cancel", "host": ["{{base_url}}"], "path": ["api", "v1", "orders", "{{order_uuid}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Reorder",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_uuid}}/reorder", "host": ["{{base_url}}"], "path": ["api", "v1", "orders", "{{order_uuid}}", "reorder"] }
+          }
+        },
+        {
+          "name": "Guest Order Lookup",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "url": { "raw": "{{base_url}}/api/v1/guest/orders/{{orderNumber}}", "host": ["{{base_url}}"], "path": ["api", "v1", "guest", "orders", "{{orderNumber}}"] }
+          }
+        },
+        {
+          "name": "Guest Order Summary",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "url": { "raw": "{{base_url}}/api/v1/guest/orders/{{orderNumber}}/summary", "host": ["{{base_url}}"], "path": ["api", "v1", "guest", "orders", "{{orderNumber}}", "summary"] }
+          }
+        }
+      ]
+    },
+{
+      "name": "6. Wishlist",
+      "item": [
+        {
+          "name": "List Wishlist",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/wishlist", "host": ["{{base_url}}"], "path": ["api", "v1", "wishlist"] }
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{ \"product_uuid\": \"{{product_uuid}}\", \"variant_uuid\": null }", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/wishlist", "host": ["{{base_url}}"], "path": ["api", "v1", "wishlist"] }
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "DELETE",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/api/v1/wishlist/{{wishlist_uuid}}", "host": ["{{base_url}}"], "path": ["api", "v1", "wishlist", "{{wishlist_uuid}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Payment",
+      "item": [
+        {
+          "name": "Create Payment Intent",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{auth_token}}", "disabled": true }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"order_uuid\": \"{{order_uuid}}\",\n  \"provider\": \"stripe\",\n  \"method\": \"card\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/payments/intent", "host": ["{{base_url}}"], "path": ["api", "v1", "payments", "intent"] }
+          }
+        },
+        {
+          "name": "Show Payment Intent",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "url": { "raw": "{{base_url}}/api/v1/payments/intents/{{payment_intent_uuid}}", "host": ["{{base_url}}"], "path": ["api", "v1", "payments", "intents", "{{payment_intent_uuid}}"] }
+          }
+        },
+        {
+          "name": "Payment Webhook (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Webhook-Signature", "value": "<signature>" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"provider\": \"stripe\",\n  \"event\": \"payment_intent.succeeded\",\n  \"payload\": {}\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/v1/payments/webhook", "host": ["{{base_url}}"], "path": ["api", "v1", "payments", "webhook"] }
+          }
+        }
+      ]
+    }
+  ]
+}

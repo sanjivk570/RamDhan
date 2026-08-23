@@ -2,6 +2,15 @@
 
 use App\Modules\Category\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
+use App\Modules\Category\Controllers\Storefront\StorefrontCategoryController;
+
+/**
+ * Storefront (public) category catalog routes.
+ */
+Route::prefix('api/v1/storefront')->group(function () {
+    Route::get('/categories', [StorefrontCategoryController::class, 'index']);
+    Route::get('/categories/{uuid}', [StorefrontCategoryController::class, 'show']);
+});
 
 Route::prefix('api/v1')->group(function () {
     Route::middleware('auth:sanctum')->prefix('categories')->group(function () {

@@ -3,6 +3,17 @@
 use App\Modules\Product\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use App\Modules\Product\Controllers\ProductImageController;
+use App\Modules\Product\Controllers\Storefront\StorefrontProductController;
+
+/**
+ * Storefront (public) product catalog routes.
+ *
+ * @author Sanjiv Kumar Kushwaha
+ */
+Route::prefix('api/v1/storefront')->group(function () {
+    Route::get('/products', [StorefrontProductController::class, 'index']);
+    Route::get('/products/{uuid}', [StorefrontProductController::class, 'show']);
+});
 
 /**
  * Product API routes.
