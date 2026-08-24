@@ -58,15 +58,31 @@ class InventoryStockRepository
      */
     public function updateInitialStockForProduct(Product $product, array $data): InventoryStock
     {
-        $stock = InventoryStock::where('product_id', $product->id)->first();
+        // $stock = InventoryStock::where('product_id', $product->id)->first();
 
-        if(!empty($data['stock_quantity']) ){
+        // if(!empty($data['stock_quantity']) ){
+        //     $stock->quantity = $data['stock_quantity'];
+        // }
+        // if(!empty($data['stock_quantity']) ){
+        //     $stock->low_stock_threshold = $data['low_stock_threshold'];
+        // }
+        // $stock->save();
+        // return $stock->fresh();
+
+        $stock = InventoryStock::firstOrNew([
+            'product_id' => $product->id,
+        ]);
+
+        if (isset($data['stock_quantity'])) {
             $stock->quantity = $data['stock_quantity'];
         }
-        if(!empty($data['stock_quantity']) ){
+
+        if (isset($data['low_stock_threshold'])) {
             $stock->low_stock_threshold = $data['low_stock_threshold'];
         }
+
         $stock->save();
+
         return $stock->fresh();
     }
 

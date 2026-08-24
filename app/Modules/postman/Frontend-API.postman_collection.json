@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "ramdhan-frontend-storefront-collection",
     "name": "RamDhan - Frontend Storefront API",
-    "description": "Common Postman collection for the RamDhan customer-facing (storefront) API.\n\nConsumed by: frontend web / mobile storefront.\n\nGlobal variables:\n  {{base_url}}      - e.g. http://dev.ramdhan.in\n  {{auth_token}}    - customer Bearer token (set automatically on register/login)\n  {{guest_token}}   - guest cart token (header X-Guest-Token)\n\nHeader used for guest/customer carts and orders:  X-Guest-Token: {{guest_token}}\nHeader used for authenticated customer calls:     Authorization: Bearer {{auth_token}}",
+    "description": "Common Postman collection for the RamDhan customer-facing (storefront) API.\n\nConsumed by: frontend web / mobile storefront.\n\nCheckout flow (in order):\n  1. Build cart (add/update/remove items).\n  2. Select shipping address -> POST /api/v1/shipping/rates\n     (customers pass customer_address_uuid; guests pass X-Guest-Token + country/state/postal).\n  3. Pick a rate -> POST /api/v1/cart/shipping-method (applies + recalculates all prices).\n  4. GET /api/v1/cart/summary for the authoritative price breakdown.\n  5. POST /api/v1/orders/checkout (payment) - shipping_rate_uuid is re-validated server-side.\n\nTax note: line taxes are recalculated against the selected destination (country/state).\nShipping amount is ALWAYS computed server-side; never send amounts from the client.\n\nGlobal variables:\n  {{base_url}}      - e.g. http://dev.ramdhan.in\n  {{auth_token}}    - customer Bearer token (set automatically on register/login)\n  {{guest_token}}   - guest cart token (header X-Guest-Token)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -16,7 +16,8 @@
     { "key": "orderNumber", "value": "<order-number>" },
     { "key": "wishlist_uuid", "value": "<wishlist-uuid>" },
     { "key": "address_uuid", "value": "<address-uuid>" },
-    { "key": "payment_intent_uuid", "value": "<payment-intent-uuid>" }
+    { "key": "payment_intent_uuid", "value": "<payment-intent-uuid>" },
+    { "key": "shipping_rate_uuid", "value": "<shipping-rate-uuid>" }
   ],
   "item": [
     {
@@ -304,7 +305,7 @@
           "request": {
             "method": "POST",
             "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{auth_token}}", "disabled": true }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"guest_token\": \"{{guest_token}}\",\n  \"email\": \"buyer@example.com\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"payment_method\": \"cod\",\n  \"shipping_address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Mumbai\",\n    \"state\": \"MH\",\n    \"postal_code\": \"400001\",\n    \"country\": \"IN\"\n  }\n}", "options": { "raw": { "language": "json" } } },
+            "body": { "mode": "raw", "raw": "{\n  \"guest_token\": \"{{guest_token}}\",\n  \"email\": \"buyer@example.com\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"payment_method\": \"cod\",\n  \"shipping_rate_uuid\": \"{{shipping_rate_uuid}}\",\n  \"shipping_address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Mumbai\",\n    \"state\": \"MH\",\n    \"postal_code\": \"400001\",\n    \"country\": \"IN\"\n  }\n}", "options": { "raw": { "language": "json" } } },
             "url": { "raw": "{{base_url}}/api/v1/orders/checkout", "host": ["{{base_url}}"], "path": ["api", "v1", "orders", "checkout"] }
           }
         },
@@ -432,6 +433,78 @@
             "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Webhook-Signature", "value": "<signature>" } ],
             "body": { "mode": "raw", "raw": "{\n  \"provider\": \"stripe\",\n  \"event\": \"payment_intent.succeeded\",\n  \"payload\": {}\n}", "options": { "raw": { "language": "json" } } },
             "url": { "raw": "{{base_url}}/api/v1/payments/webhook", "host": ["{{base_url}}"], "path": ["api", "v1", "payments", "webhook"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Shipping & Tax",
+      "item": [
+        {
+          "name": "Shipping Rates (Customer - saved address)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{auth_token}}", "type": "string" } ] },
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_uuid\": \"<cart-uuid>\",\n  \"customer_address_uuid\": \"{{address_uuid}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/shipping/rates", "host": ["{{base_url}}"], "path": ["api", "v1", "shipping", "rates"] }
+          }
+        },
+        {
+          "name": "Shipping Rates (Guest - inline address)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_uuid\": \"<cart-uuid>\",\n  \"country_code\": \"IN\",\n  \"state_code\": \"DL\",\n  \"postal_code\": \"110001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/shipping/rates", "host": ["{{base_url}}"], "path": ["api", "v1", "shipping", "rates"] }
+          }
+        },
+        {
+          "name": "Apply Shipping Method to Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 200) {", "    pm.collectionVariables.set('shipping_rate_uuid', pm.request.body.raw ? JSON.parse(pm.request.body.raw).shipping_rate_uuid : pm.collectionVariables.get('shipping_rate_uuid'));", "}", ""], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{auth_token}}", "disabled": true }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shipping_rate_uuid\": \"{{shipping_rate_uuid}}\",\n  \"country_code\": \"IN\",\n  \"state_code\": \"DL\",\n  \"postal_code\": \"110001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/cart/shipping-method", "host": ["{{base_url}}"], "path": ["api", "v1", "cart", "shipping-method"] }
+          }
+        },
+        {
+          "name": "Apply Shipping Method (alt. endpoint)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_uuid\": \"<cart-uuid>\",\n  \"shipping_rate_uuid\": \"{{shipping_rate_uuid}}\",\n  \"country_code\": \"IN\",\n  \"state_code\": \"DL\",\n  \"postal_code\": \"110001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/shipping/apply", "host": ["{{base_url}}"], "path": ["api", "v1", "shipping", "apply"] }
+          }
+        },
+        {
+          "name": "Cart Summary (recalculated totals)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{auth_token}}", "disabled": true }, { "key": "X-Guest-Token", "value": "{{guest_token}}" } ],
+            "url": { "raw": "{{base_url}}/api/v1/cart/summary", "host": ["{{base_url}}"], "path": ["api", "v1", "cart", "summary"] }
           }
         }
       ]

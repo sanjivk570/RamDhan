@@ -87,6 +87,62 @@ class TaxRateRepository
             ->firstOrFail();
     }
 
+    /**
+     * Resolve the applicable (destination-aware) tax rate for a tax class.
+     *
+     * Matching priority:
+     *  1. Exact country + state.
+     *  2. Exact country (state ignored/null).
+     *  3. Any active rate for the class (lowest priority wins).
+     *
+     * @param int $taxClassId
+     * @param string|null $countryCode e.g. "IN"
+     * @param string|null $stateCode   e.g. "MH" or null
+     * @return TaxRate|null
+     */
+    public function resolveRate(
+        int $taxClassId,
+        ?string $countryCode = null,
+        ?string $stateCode = null
+    ): ?TaxRate {
+        $country = strtoupper(trim((string) $countryCode));
+        $state = strtoupper(trim((string) $stateCode));
+
+        $base = static function () use ($taxClassId) {
+            return TaxRate::query()
+                ->where('tax_class_id', $taxClassId)
+                ->where('is_active', true)
+                ->orderBy('priority')
+                ->orderBy('id');
+        };
+
+        // 1. Exact country + state
+        if ($country !== '' && $state !== '') {
+            $rate = $base()
+                ->where('country_code', $country)
+                ->where('state_code', $state)
+                ->first();
+
+            if ($rate) {
+                return $rate;
+            }
+        }
+
+        // 2. Country only (state does not discriminate)
+        if ($country !== '') {
+            $rate = $base()
+                ->where('country_code', $country)
+                ->first();
+
+            if ($rate) {
+                return $rate;
+            }
+        }
+
+        // 3. Any active rate for the class as fallback
+        return $base()->first();
+    }
+
     public function create(array $data): TaxRate
     {
         return TaxRate::create($data);

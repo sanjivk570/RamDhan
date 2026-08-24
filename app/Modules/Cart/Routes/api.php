@@ -9,6 +9,19 @@ use App\Modules\Cart\Controllers\Admin\CartController as AdminCartController;
 Route::prefix('api/v1')->group(function () {
     Route::get('cart', [CartController::class, 'show'])
         ->middleware('throttle:100,1'); // Rate limit to 100 per minute
+
+    /*
+     * Fully recalculated price summary (destination-aware tax,
+     * applied coupon/shipping and grand total).
+     */
+    Route::get('cart/summary', [CartController::class, 'summary'])
+        ->middleware('throttle:100,1');
+
+    /*
+     * Apply the shopper-selected shipping rate (after address selection).
+     */
+    Route::post('cart/shipping-method', [CartController::class, 'applyShipping'])
+        ->middleware('throttle:60,1');
     
     Route::post('cart/items', [CartController::class, 'add'])
         ->middleware('throttle:100,1'); // Rate limit to 100 per minute

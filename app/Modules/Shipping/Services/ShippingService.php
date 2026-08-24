@@ -15,6 +15,7 @@ use App\Modules\Cart\Models\Cart;
 use App\Modules\Customer\Models\CustomerAddress;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class ShippingService
 {
@@ -138,26 +139,31 @@ class ShippingService
             ->orderBy("sort_order")
             ->get();
 
-        $zone = $zones->first(function (ShippingZone $zone) use (
-            $countryCode,
-            $stateCode,
-            $postalCode
-        ) {
-            return $this->zoneMatches(
-                $zone,
-                $countryCode,
-                $stateCode,
-                $postalCode
-            );
-        });
+        /*
+         * Collect EVERY zone whose destination rules match.
+         *
+         * A destination can legitimately be covered by more than one
+         * zone (e.g. a country-level zone plus a state-level zone), so
+         * restricting to the first match silently drops valid rates.
+         */
+        $matchedZoneIds = $zones
+            ->filter(
+                fn (ShippingZone $zone) => $this->zoneMatches(
+                    $zone,
+                    $countryCode,
+                    $stateCode,
+                    $postalCode
+                )
+            )
+            ->pluck("id");
 
-        if (!$zone) {
+        if ($matchedZoneIds->isEmpty()) {
             return collect();
         }
 
         $rates = ShippingRate::query()
             ->with("method")
-            ->where("shipping_zone_id", $zone->id)
+            ->whereIn("shipping_zone_id", $matchedZoneIds)
             ->where("is_active", true)
             ->where(function ($query) use ($weight) {
                 $query
@@ -181,6 +187,16 @@ class ShippingService
             })
             ->orderBy("sort_order")
             ->get();
+
+        /*
+         * A rate whose delivery method is missing or inactive must
+         * never break the storefront - skip it defensively instead of
+         * letting a single bad row turn into a 500.
+         */
+        $rates = $rates->filter(
+            fn (ShippingRate $rate) => $rate->method !== null
+                && $rate->method->is_active
+        );
 
         return $rates->map(function (ShippingRate $rate) use (
             $orderAmount,
@@ -273,26 +289,33 @@ class ShippingService
      */
 
     /**
-     * Calculate shipping from actual cart + saved customer address.
+     * Calculate shipping rates for a real cart.
      *
-     * Frontend does not send:
-     * - country
-     * - state
-     * - postal code
-     * - order amount
-     * - weight
+     * Supports both authenticated customers (saved address) and
+     * guests (inline destination). The resolved destination is
+     * snapshotted on the cart so tax, shipping selection, summary
+     * and checkout all reuse the same destination.
      *
-     * Backend calculates everything.
+     * @param string $cartUuid
+     * @param string|null $customerAddressUuid Saved customer address UUID.
+     * @param int|null $customerId Authenticated customer id.
+     * @param array<string, mixed> $inlineAddress Guest inline destination.
+     * @param string|null $guestToken Guest cart token.
+     * @return array<string, mixed>
      */
     public function calculateCartShipping(
         string $cartUuid,
-        string $customerAddressUuid,
-        ?int $customerId = null
+        ?string $customerAddressUuid = null,
+        ?int $customerId = null,
+        array $inlineAddress = [],
+        ?string $guestToken = null
     ): array {
         return DB::transaction(function () use (
             $cartUuid,
             $customerAddressUuid,
-            $customerId
+            $customerId,
+            $inlineAddress,
+            $guestToken
         ) {
 
             /*
@@ -317,63 +340,37 @@ class ShippingService
 
             /*
              * ---------------------------------------------------------
-             * 2. Security:
-             * Customer can only calculate shipping for own cart.
+             * 2. Security: only the cart owner may use it
              * ---------------------------------------------------------
              */
 
-            if ($customerId !== null) {
-
-                if ((int) $cart->customer_id !== (int) $customerId) {
-                    abort(
-                        403,
-                        'You are not authorized to access this cart.'
-                    );
-                }
-            }
+            $this->authorizeCart($cart, $customerId, $guestToken);
 
             /*
              * ---------------------------------------------------------
-             * 3. Load customer's saved address
+             * 3. Resolve destination (saved address or inline)
              * ---------------------------------------------------------
              */
 
-            $addressQuery = CustomerAddress::query()
-                ->where('uuid', $customerAddressUuid)
-                ->where('is_active', true);
-
-            if ($customerId !== null) {
-                $addressQuery->where(
-                    'customer_id',
-                    $customerId
-                );
-            } else {
-                $addressQuery->where(
-                    'customer_id',
-                    $cart->customer_id
-                );
-            }
-
-            $address = $addressQuery->first();
-
-            if (!$address) {
-                throw (new ModelNotFoundException())
-                    ->setModel(
-                        CustomerAddress::class,
-                        [$customerAddressUuid]
-                    );
-            }
+            $address = $this->resolveCartShippingAddress(
+                $cart,
+                $customerAddressUuid,
+                $inlineAddress
+            );
 
             /*
              * ---------------------------------------------------------
-             * 4. Validate cart items
+             * 4. Cart amount + weight
              * ---------------------------------------------------------
              */
+
+            [$subtotal, $totalWeight] = $this->cartAmounts($cart);
 
             if ($cart->items->isEmpty()) {
                 return [
                     'cart_uuid' => $cart->uuid,
-                    'customer_address_uuid' => $address->uuid,
+                    'customer_address_uuid' => $address['uuid'] ?? null,
+                    'address' => $address,
                     'currency' => 'INR',
                     'subtotal' => 0,
                     'discount' => 0,
@@ -386,46 +383,12 @@ class ShippingService
 
             /*
              * ---------------------------------------------------------
-             * 5. Calculate actual cart amount + weight
+             * 5. Snapshot the destination on the cart so later steps
+             *    (apply shipping / summary / checkout) reuse it.
              * ---------------------------------------------------------
              */
 
-            $subtotal = 0.0;
-            $totalWeight = 0.0;
-
-            foreach ($cart->items as $item) {
-
-                $product = $item->product;
-                $variant = $item->variant;
-
-                /*
-                 * Variant price has priority.
-                 */
-                $unitPrice = $variant?->price
-                    ?? $product?->price
-                    ?? 0;
-
-                $quantity = (int) $item->quantity;
-
-                $lineTotal = (float) $unitPrice * $quantity;
-
-                $subtotal += $lineTotal;
-
-                /*
-                 * Weight should preferably be available
-                 * on product/variant.
-                 *
-                 * If current schema doesn't contain weight,
-                 * this remains 0 until weight is added.
-                 */
-                $weight = (float) (
-                    $variant?->weight
-                    ?? $product?->weight
-                    ?? 0
-                );
-
-                $totalWeight += $weight * $quantity;
-            }
+            $cart->update(['shipping_address' => $address]);
 
             /*
              * ---------------------------------------------------------
@@ -434,9 +397,9 @@ class ShippingService
              */
 
             $rates = $this->calculateRates([
-                'country_code' => $address->country_code,
-                'state_code' => $address->state_code,
-                'postal_code' => $address->postal_code,
+                'country_code' => (string) ($address['country_code'] ?? ''),
+                'state_code' => (string) ($address['state_code'] ?? ''),
+                'postal_code' => (string) ($address['postal_code'] ?? ''),
                 'order_amount' => $subtotal,
                 'weight' => $totalWeight,
             ]);
@@ -450,19 +413,9 @@ class ShippingService
             return [
                 'cart_uuid' => $cart->uuid,
 
-                'customer_address_uuid' => $address->uuid,
+                'customer_address_uuid' => $address['uuid'] ?? null,
 
-                'address' => [
-                    'uuid' => $address->uuid,
-                    'type' => $address->type,
-                    'label' => $address->label,
-                    'city' => $address->city,
-                    'state' => $address->state,
-                    'state_code' => $address->state_code,
-                    'postal_code' => $address->postal_code,
-                    'country' => $address->country,
-                    'country_code' => $address->country_code,
-                ],
+                'address' => $address,
 
                 'summary' => [
                     'currency' => 'INR',
@@ -473,6 +426,280 @@ class ShippingService
                 'rates' => $rates,
             ];
         });
+    }
+
+    /**
+     * Apply a selected shipping rate to a cart.
+     *
+     * Flow: address selected -> shipping rates listed -> shopper picks
+     * a rate -> this validates the rate against the destination and the
+     * live cart amounts (server-side), stores it on the cart and
+     * recalculates all cart prices (tax/shipping/grand total).
+     *
+     * @param string $cartUuid
+     * @param string $rateUuid Selected shipping rate UUID.
+     * @param int|null $customerId Authenticated customer id.
+     * @param string|null $guestToken Guest cart token.
+     * @param string|null $customerAddressUuid Optional saved address override.
+     * @param array<string, mixed> $inlineAddress Optional inline destination override.
+     * @return \App\Modules\Cart\Models\Cart Recalculated cart.
+     *
+     * @throws \RuntimeException When the selected rate is not applicable.
+     */
+    public function applyShippingToCart(
+        string $cartUuid,
+        string $rateUuid,
+        ?int $customerId = null,
+        ?string $guestToken = null,
+        ?string $customerAddressUuid = null,
+        array $inlineAddress = []
+    ): Cart {
+        return DB::transaction(function () use (
+            $cartUuid,
+            $rateUuid,
+            $customerId,
+            $guestToken,
+            $customerAddressUuid,
+            $inlineAddress
+        ) {
+
+            /*
+             * ---------------------------------------------------------
+             * 1. Load cart + ownership check
+             * ---------------------------------------------------------
+             */
+
+            $cart = Cart::query()
+                ->with(['items.product', 'items.variant'])
+                ->where('uuid', $cartUuid)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$cart) {
+                throw (new ModelNotFoundException())
+                    ->setModel(Cart::class, [$cartUuid]);
+            }
+
+            $this->authorizeCart($cart, $customerId, $guestToken);
+
+            /*
+             * ---------------------------------------------------------
+             * 2. Resolve destination: explicit -> snapshot on cart
+             * ---------------------------------------------------------
+             */
+
+            $address = $this->resolveCartShippingAddress(
+                $cart,
+                $customerAddressUuid,
+                $inlineAddress,
+                true
+            );
+
+            /*
+             * ---------------------------------------------------------
+             * 3. Live cart amounts (never trust frontend values)
+             * ---------------------------------------------------------
+             */
+
+            [$subtotal, $totalWeight] = $this->cartAmounts($cart);
+
+            /*
+             * ---------------------------------------------------------
+             * 4. Validate + price the selected rate server-side
+             * ---------------------------------------------------------
+             */
+
+            $selected = $this->resolveSelectedRate($rateUuid, [
+                'country_code' => (string) ($address['country_code'] ?? ''),
+                'state_code' => (string) ($address['state_code'] ?? ''),
+                'postal_code' => (string) ($address['postal_code'] ?? ''),
+                'order_amount' => $subtotal,
+                'weight' => $totalWeight,
+            ]);
+
+            /*
+             * ---------------------------------------------------------
+             * 5. Store selection + recalculate all cart prices
+             * ---------------------------------------------------------
+             */
+
+            return $this->cartService()->setShipping($cart, [
+                'shipping_rate_uuid' => $selected['uuid'],
+                'shipping_method_uuid' => $selected['method']['uuid'],
+                'shipping_method_name' => $selected['method']['name'],
+                'shipping_method_code' => $selected['method']['code'],
+                'shipping_amount' => $selected['amount'],
+                'estimated_delivery_min_days' => $selected['estimated_days']['min'] ?? null,
+                'estimated_delivery_max_days' => $selected['estimated_days']['max'] ?? null,
+                'shipping_address' => $address,
+            ]);
+        });
+    }
+
+    /**
+     * Resolve the shipping destination for a cart operation.
+     *
+     * Priority: saved customer address -> explicit inline address ->
+     * destination snapshotted on the cart from an earlier step.
+     *
+     * @param \App\Modules\Cart\Models\Cart $cart
+     * @param string|null $customerAddressUuid
+     * @param array<string, mixed> $inlineAddress
+     * @param bool $allowSnapshot Allow falling back to the cart's stored address.
+     * @return array<string, mixed>
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \RuntimeException
+     */
+    private function resolveCartShippingAddress(
+        Cart $cart,
+        ?string $customerAddressUuid = null,
+        array $inlineAddress = [],
+        bool $allowSnapshot = false
+    ): array {
+
+        /*
+         * Saved customer address (authenticated flow).
+         */
+        if (!empty($customerAddressUuid)) {
+            $addressQuery = CustomerAddress::query()
+                ->where('uuid', $customerAddressUuid)
+                ->where('is_active', true);
+
+            if ($cart->customer_id !== null) {
+                $addressQuery->where('customer_id', $cart->customer_id);
+            }
+
+            $address = $addressQuery->first();
+
+            if (!$address) {
+                throw (new ModelNotFoundException())
+                    ->setModel(CustomerAddress::class, [$customerAddressUuid]);
+            }
+
+            return [
+                'uuid' => $address->uuid,
+                'label' => $address->label,
+                'city' => $address->city,
+                'state' => $address->state,
+                'state_code' => strtoupper((string) $address->state_code),
+                'postal_code' => (string) $address->postal_code,
+                'country' => $address->country,
+                'country_code' => strtoupper((string) $address->country_code),
+            ];
+        }
+
+        /*
+         * Inline destination (guest checkout).
+         */
+        if (
+            !empty($inlineAddress['country_code'])
+            || !empty($inlineAddress['country'])
+            || !empty($inlineAddress['postal_code'])
+        ) {
+            return $this->normalizeAddress($inlineAddress);
+        }
+
+        /*
+         * Destination captured in an earlier step (rates lookup).
+         */
+        if ($allowSnapshot && !empty($cart->shipping_address)) {
+            return $this->normalizeAddress(
+                is_array($cart->shipping_address) ? $cart->shipping_address : []
+            );
+        }
+
+        throw new RuntimeException(
+            'A shipping address is required to calculate shipping.'
+        );
+    }
+
+    /**
+     * Normalize any address payload into canonical destination keys.
+     *
+     * Accepts both country/country_code and state/state_code spellings.
+     *
+     * @param array<string, mixed> $address
+     * @return array<string, string>
+     */
+    private function normalizeAddress(array $address): array
+    {
+        return [
+            'country_code' => strtoupper(trim((string) (
+                $address['country_code'] ?? $address['country'] ?? ''
+            ))),
+            'state_code' => strtoupper(trim((string) (
+                $address['state_code'] ?? $address['state'] ?? ''
+            ))),
+            'postal_code' => trim((string) ($address['postal_code'] ?? '')),
+        ];
+    }
+
+    /**
+     * Ensure the caller owns the given cart.
+     *
+     * @param \App\Modules\Cart\Models\Cart $cart
+     * @param int|null $customerId
+     * @param string|null $guestToken
+     * @return void
+     */
+    private function authorizeCart(
+        Cart $cart,
+        ?int $customerId = null,
+        ?string $guestToken = null
+    ): void {
+        if ($customerId !== null) {
+            if ((int) $cart->customer_id !== (int) $customerId) {
+                abort(403, 'You are not authorized to access this cart.');
+            }
+
+            return;
+        }
+
+        if (
+            $guestToken === null
+            || $cart->guest_token === null
+            || !hash_equals($cart->guest_token, $guestToken)
+        ) {
+            abort(403, 'You are not authorized to access this cart.');
+        }
+    }
+
+    /**
+     * Live subtotal and weight of the cart.
+     *
+     * Variant price/weight take priority over product values.
+     *
+     * @param \App\Modules\Cart\Models\Cart $cart
+     * @return array{0: float, 1: float} [subtotal, totalWeight]
+     */
+    private function cartAmounts(Cart $cart): array
+    {
+        $subtotal = 0.0;
+        $totalWeight = 0.0;
+
+        foreach ($cart->items as $item) {
+            $unitPrice = (float) ($item->variant?->price ?? $item->product?->price ?? 0);
+            $quantity = (float) $item->quantity;
+
+            $subtotal += $unitPrice * $quantity;
+
+            $weight = (float) ($item->variant?->weight ?? $item->product?->weight ?? 0);
+
+            $totalWeight += $weight * $quantity;
+        }
+
+        return [$subtotal, $totalWeight];
+    }
+
+    /**
+     * Lazily resolve the cart service (avoids constructor coupling).
+     *
+     * @return \App\Modules\Cart\Services\CartService
+     */
+    private function cartService(): \App\Modules\Cart\Services\CartService
+    {
+        return app(\App\Modules\Cart\Services\CartService::class);
     }
 
     /**

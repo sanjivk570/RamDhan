@@ -7,13 +7,15 @@ use App\Modules\Cart\Models\Cart;
 use App\Modules\Cart\Models\CartItem;
 use App\Modules\Product\Models\Product;
 use App\Modules\ProductVariant\Models\ProductVariant;
+use App\Modules\Tax\Repositories\TaxRateRepository;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 final class CartService
 {
     public function __construct(
-        private readonly \App\Modules\Cart\Repositories\CartRepository $repository
+        private readonly \App\Modules\Cart\Repositories\CartRepository $repository,
+        private readonly TaxRateRepository $taxRateRepository
     ) {
     }
 
@@ -100,20 +102,29 @@ final class CartService
                         "line_total" => $price * $qty,
                     ]);
             }
-            return $this->recalculate($cart->fresh("items"));
+            return $this->recalculate(
+                $cart->fresh("items"),
+                $cart->shipping_address ?: null
+            );
         });
     }
     public function update(Cart $cart, CartItem $item, float $qty): Cart
     {
         $item->update(["quantity" => $qty]);
-        return $this->recalculate($cart->fresh("items"));
+        return $this->recalculate(
+            $cart->fresh("items"),
+            $cart->shipping_address ?: null
+        );
     }
     public function remove(Cart $cart, CartItem $item): Cart
     {
         $item->delete();
-        return $this->recalculate($cart->fresh("items"));
+        return $this->recalculate(
+            $cart->fresh("items"),
+            $cart->shipping_address ?: null
+        );
     }
-    public function recalculate(Cart $cart): Cart
+    public function recalculate(Cart $cart, ?array $destination = null): Cart
     {
         $subtotal = 0;
         $tax = 0;
@@ -121,12 +132,12 @@ final class CartService
             $line = (float) $item->unit_price * (float) $item->quantity;
             $rate = 0;
             if ($item->tax_class_id) {
-                $rate =
-                    (float) (\Illuminate\Support\Facades\DB::table("tax_rates")
-                        ->where("tax_class_id", $item->tax_class_id)
-                        ->where("is_active", true)
-                        ->orderBy("priority")
-                        ->value("rate") ?? 0);
+                $applicable = $this->taxRateRepository->resolveRate(
+                    (int) $item->tax_class_id,
+                    $destination["country_code"] ?? null,
+                    $destination["state_code"] ?? null
+                );
+                $rate = $applicable ? (float) $applicable->rate : 0;
             }
             $lineTax = round(($line * $rate) / 100, 2);
             $item->update([
@@ -149,6 +160,56 @@ final class CartService
             "grand_total" => $grand,
         ]);
         return $cart->fresh("items");
+    }
+
+    /**
+     * Get the cart and fully recalculate all prices (tax/shipping/grand total).
+     *
+     * Used by the cart summary endpoint so the frontend always sees totals
+     * that are consistent with the current cart, applied coupon, shipping
+     * method selection and shipping address.
+     *
+     * @param int|null $customerId
+     * @param string|null $guestToken
+     * @return Cart
+     */
+    public function summary(?int $customerId, ?string $guestToken): Cart
+    {
+        $cart = $this->get($customerId, $guestToken)->load("items");
+
+        return $this->recalculate(
+            $cart,
+            $cart->shipping_address ?: null
+        );
+    }
+
+    /**
+     * Persist the validated shipping selection on the cart and recalculate.
+     *
+     * Amount and method details are ALWAYS computed server-side by the
+     * ShippingService; this method only stores the result.
+     *
+     * @param Cart $cart
+     * @param array<string, mixed> $shipping
+     * @return Cart
+     */
+    public function setShipping(Cart $cart, array $shipping): Cart
+    {
+        $cart->update([
+            "shipping_rate_uuid" => $shipping["shipping_rate_uuid"] ?? null,
+            "shipping_method_uuid" => $shipping["shipping_method_uuid"] ?? null,
+            "shipping_method_name" => $shipping["shipping_method_name"] ?? null,
+            "shipping_method_code" => $shipping["shipping_method_code"] ?? null,
+            "shipping_amount" => (float) ($shipping["shipping_amount"] ?? 0),
+            "estimated_delivery_min_days" => $shipping["estimated_delivery_min_days"] ?? null,
+            "estimated_delivery_max_days" => $shipping["estimated_delivery_max_days"] ?? null,
+            "shipping_address" => $shipping["shipping_address"] ?? null,
+        ]);
+
+        return $this->recalculate(
+            $cart->fresh("items"),
+            $shipping["shipping_address"] ?? []
+        );
     }
     public function merge(Cart $customerCart, Cart $guestCart): Cart
     {
@@ -199,7 +260,10 @@ final class CartService
             }
 
             $guestCart->update(["status" => Cart::MERGED]);
-            return $this->recalculate($customerCart->fresh("items"));
+            return $this->recalculate(
+                $customerCart->fresh("items"),
+                $customerCart->shipping_address ?: null
+            );
         });
     }
 

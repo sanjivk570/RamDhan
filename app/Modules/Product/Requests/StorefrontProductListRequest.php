@@ -34,6 +34,8 @@ class StorefrontProductListRequest extends FormRequest
         return [
             "search" => ["nullable", "string", "max:255"],
 
+            "category" => ["nullable", "string", "max:255"],
+
             "filters" => ["nullable", "array"],
 
             "filters.name" => ["nullable", "string", "max:255"],

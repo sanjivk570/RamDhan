@@ -10,6 +10,7 @@ use App\Modules\Customer\Models\Customer;
 use App\Modules\Customer\Models\CustomerAddress;
 use App\Modules\Promotion\Services\CouponService;
 use App\Modules\SalesInvoice\Services\SalesInvoiceService;
+use App\Modules\Shipping\Services\ShippingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -22,7 +23,8 @@ final class OrderService
         private readonly CartService $cartService,
         private readonly CouponService $couponService,
         private readonly SalesInvoiceService $invoiceService,
-        private readonly OrderRepository $repository
+        private readonly OrderRepository $repository,
+        private readonly ShippingService $shippingService
     ) {
     }
     public function checkout(array $data, ?Customer $customer): Order
@@ -48,6 +50,31 @@ final class OrderService
             if (!$shipping) {
                 throw new RuntimeException("Shipping address is required.");
             }
+
+            /*
+             * Destination-aware tax:
+             * Recompute every line tax against the selected shipping
+             * destination (country/state) before totals are frozen.
+             */
+            $destination = $this->normalizeDestination($shipping);
+
+            $cart = $this->cartService->recalculate(
+                $cart->load("items"),
+                $destination
+            );
+
+            /*
+             * Shipping is validated and priced server-side BEFORE payment.
+             * Either the rate explicitly chosen at checkout, or the one
+             * already applied to the cart during the shipping step, is
+             * re-verified against the destination and live cart amounts.
+             */
+            $cart = $this->applyCheckoutShipping(
+                $cart,
+                $data["shipping_rate_uuid"] ?? null,
+                $destination
+            );
+
             if ($cart->coupon_code) {
                 $coupon = $this->couponService->validate(
                     $cart->coupon_code,
@@ -90,6 +117,10 @@ final class OrderService
                 "discount_amount" => $cart->discount_amount,
                 "tax_amount" => $cart->tax_amount,
                 "shipping_amount" => $cart->shipping_amount,
+                "shipping_rate_uuid" => $cart->shipping_rate_uuid,
+                "shipping_method_uuid" => $cart->shipping_method_uuid,
+                "shipping_method_name" => $cart->shipping_method_name,
+                "shipping_method_code" => $cart->shipping_method_code,
                 "grand_total" => $cart->grand_total,
                 "coupon_code" => $cart->coupon_code,
                 "payment_method" => $data["payment_method"],
@@ -157,6 +188,82 @@ final class OrderService
             return $a->toArray();
         }
         return $input;
+    }
+
+    /**
+     * Normalize any address payload into canonical destination keys.
+     *
+     * Handles both saved addresses (country_code/state_code) and inline
+     * payloads (country/state) coming from guest checkout.
+     *
+     * @param array<string, mixed>|null $address
+     * @return array<string, string>
+     */
+    private function normalizeDestination(?array $address): array
+    {
+        if (!$address) {
+            return [];
+        }
+
+        return [
+            "country_code" => strtoupper(
+                trim((string) ($address["country_code"] ?? $address["country"] ?? ""))
+            ),
+            "state_code" => strtoupper(
+                trim((string) ($address["state_code"] ?? $address["state"] ?? ""))
+            ),
+            "postal_code" => trim((string) ($address["postal_code"] ?? "")),
+        ];
+    }
+
+    /**
+     * Validate and apply the shipping selection before payment.
+     *
+     * Priority: explicit rate from the checkout request, otherwise the
+     * rate already applied to the cart during the shipping step. The
+     * amount is ALWAYS recalculated server-side; a rate that no longer
+     * applies to the destination/amount aborts the checkout.
+     *
+     * When no shipping selection exists at all the cart keeps its
+     * current (zero) shipping amount so digital/free-shipping flows
+     * keep working.
+     *
+     * @param Cart $cart Recalculated cart.
+     * @param string|null $rateUuid Rate chosen on the checkout request.
+     * @param array<string, string> $destination Normalized destination.
+     * @return Cart Cart with final totals.
+     *
+     * @throws \RuntimeException When the selected rate is not applicable.
+     */
+    private function applyCheckoutShipping(
+        Cart $cart,
+        ?string $rateUuid = null,
+        array $destination = []
+    ): Cart {
+        $rateUuid = $rateUuid ?: ($cart->shipping_rate_uuid ?: null);
+
+        if (!$rateUuid) {
+            return $cart->load("items");
+        }
+
+        $selected = $this->shippingService->resolveSelectedRate($rateUuid, [
+            "country_code" => $destination["country_code"] ?? "",
+            "state_code" => $destination["state_code"] ?? "",
+            "postal_code" => $destination["postal_code"] ?? "",
+            "order_amount" => (float) $cart->subtotal,
+            "weight" => 0.0,
+        ]);
+
+        return $this->cartService->setShipping($cart, [
+            "shipping_rate_uuid" => $selected["uuid"],
+            "shipping_method_uuid" => $selected["method"]["uuid"],
+            "shipping_method_name" => $selected["method"]["name"],
+            "shipping_method_code" => $selected["method"]["code"],
+            "shipping_amount" => $selected["amount"],
+            "estimated_delivery_min_days" => $selected["estimated_days"]["min"] ?? null,
+            "estimated_delivery_max_days" => $selected["estimated_days"]["max"] ?? null,
+            "shipping_address" => $destination ?: null,
+        ]);
     }
     private function reserve($cart): void
     {

@@ -14,11 +14,16 @@ Route::prefix("api/v1")->group(function () {
     |--------------------------------------------------------------------------
     | Customer / Frontend
     |--------------------------------------------------------------------------
+    |
+    | Available to authenticated customers (saved address) and guests
+    | (inline destination + X-Guest-Token).
     */
 
-    Route::middleware(["auth:customer"])->group(function () {
-        Route::post("/shipping/rates", [ShippingController::class, "rates"]);
-    });
+    Route::post("/shipping/rates", [ShippingController::class, "rates"])
+        ->middleware("throttle:60,1");
+
+    Route::post("/shipping/apply", [ShippingController::class, "apply"])
+        ->middleware("throttle:60,1");
 
     /*
     |--------------------------------------------------------------------------

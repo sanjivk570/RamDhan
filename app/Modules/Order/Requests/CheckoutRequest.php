@@ -31,6 +31,9 @@ final class CheckoutRequest extends BaseRequest
             "billing_address.country" => ["required_with:billing_address", "string", "max:2"],
             "payment_method" => ["required", "string", "in:cod,stripe,paypal,razorpay,wallet"],
             "customer_note" => ["nullable", "string", "max:2000"],
+            // Optional shipping selection; when omitted the rate already
+            // applied to the cart (if any) is validated and reused.
+            "shipping_rate_uuid" => ["nullable", "uuid"],
         ];
     }
 }

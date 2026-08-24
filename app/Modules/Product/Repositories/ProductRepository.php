@@ -187,6 +187,17 @@ class ProductRepository
                 }
             )
 
+            ->when(
+                isset($filters['category']) && $filters['category'] !== '',
+                function ($query) use ($filters) {
+                    $query->whereHas('categories',
+                        function ($categoryQuery) use ($filters) {
+                            $categoryQuery->where('uuid', $filters['category']);
+                        }
+                    );
+                }
+            )
+
             /*
              * Column Filters
              */

@@ -35,6 +35,8 @@ class ProductListRequest extends FormRequest
         return [
             "search" => ["nullable", "string", "max:255"],
 
+            "category" => ["nullable", "uuid"],
+
             "filters" => ["nullable", "array"],
 
             "filters.name" => ["nullable", "string", "max:255"],
