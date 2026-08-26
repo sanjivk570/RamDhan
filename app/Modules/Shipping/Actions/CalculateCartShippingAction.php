@@ -14,23 +14,30 @@ final class CalculateCartShippingAction
     }
 
     /**
-     * Calculate shipping using the real cart
-     * and customer's saved address.
+     * Calculate shipping using the real cart plus either the customer's
+     * saved address or a guest inline destination.
      *
      * @param string $cartUuid
-     * @param string $customerAddressUuid
-     * @param int|null $customerId
+     * @param string|null $customerAddressUuid Saved customer address UUID (guests pass null).
+     * @param int|null $customerId Authenticated customer id (null for guests).
+     * @param array<string, mixed> $inlineAddress Guest inline destination
+     *                                             (country_code/state_code/postal_code).
+     * @param string|null $guestToken Guest cart token (X-Guest-Token).
      * @return array<string, mixed>
      */
     public function execute(
         string $cartUuid,
-        string $customerAddressUuid,
-        ?int $customerId = null
+        ?string $customerAddressUuid = null,
+        ?int $customerId = null,
+        array $inlineAddress = [],
+        ?string $guestToken = null
     ): array {
         return $this->shippingService->calculateCartShipping(
             $cartUuid,
             $customerAddressUuid,
-            $customerId
+            $customerId,
+            $inlineAddress,
+            $guestToken
         );
     }
 }

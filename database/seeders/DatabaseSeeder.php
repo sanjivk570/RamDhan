@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             \App\Modules\User\Seeders\SuperAdminSeeder::class,
             \App\Modules\Category\Seeders\CategorySeeder::class,
             \App\Modules\Product\Seeders\ProductSeeder::class,
+            \App\Modules\Customer\Seeders\CustomerDemoSeeder::class,
+            \App\Modules\Shipping\Seeders\ShippingDemoSeeder::class,
             \App\Modules\Supplier\Seeders\SupplierPermissionSeeder::class,
             \App\Modules\Purchase\Seeders\PurchasePermissionSeeder::class,
         ]);
