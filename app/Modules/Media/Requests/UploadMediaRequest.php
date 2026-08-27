@@ -26,7 +26,7 @@ class UploadMediaRequest extends FormRequest
 
             "mediable_type" => [
                 "required",
-                Rule::in(["product", "category", "brand", "user"]),
+                Rule::in(["product", "category", "brand", "user", "slider", "slider_item"]),
             ],
 
             'collection' => ['nullable', 'string', 'max:100'],

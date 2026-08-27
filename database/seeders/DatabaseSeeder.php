@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
             \App\Modules\Shipping\Seeders\ShippingDemoSeeder::class,
             \App\Modules\Supplier\Seeders\SupplierPermissionSeeder::class,
             \App\Modules\Purchase\Seeders\PurchasePermissionSeeder::class,
+            \App\Modules\Slider\Seeders\SliderPermissionSeeder::class,
+            \App\Modules\Slider\Seeders\SliderSeeder::class,
         ]);
     }
 }

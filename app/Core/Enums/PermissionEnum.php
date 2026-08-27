@@ -114,14 +114,22 @@ enum PermissionEnum: string
 
     //for Invoice
     case INVOICE_VIEW = "invoice.view";
-    case INVOICE_CREATE =  "invoice.create";
+    case INVOICE_CREATE = "invoice.create";
 
     //for payment
-    case PAYMENT_VIEW = "payment.view"; 
+    case PAYMENT_VIEW = "payment.view";
     case PAYMENT_REFUND = "payment.refund";
 
     //For return
     case RETURN_VIEW = "return.view";
     case RETURN_PROCESS = "return.process";
-    
+
+    /**
+     * Slider permissions.
+     */
+    case SLIDER_VIEW = 'slider.view';
+    case SLIDER_CREATE = 'slider.create';
+    case SLIDER_UPDATE = 'slider.update';
+    case SLIDER_DELETE = 'slider.delete';
+    case SLIDER_RESTORE = 'slider.restore';
 }

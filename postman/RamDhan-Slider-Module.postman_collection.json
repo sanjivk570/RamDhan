@@ -1,0 +1,813 @@
+{
+	"info": {
+		"_postman_id": "f3a7d0c4-91e2-4b6a-8c55-7e1a2b9d4f01",
+		"name": "RamDhan API — Slider Module",
+		"description": "Slider Module collection (Admin + Storefront).\n\n## Envelope\nEvery response follows the app-wide envelope:\n\n```json\n{\n  \"success\": true,\n  \"message\": \"...\",\n  \"data\": {},\n  \"errors\": null,\n  \"meta\": null\n}\n```\n\nPaginated lists put paginator info into `meta`: `current_page`, `last_page`, `per_page`, `total`, `from`, `to`.\n\n## Variables (auto-wired)\n- `base_url` — host only, paths already contain `/api/v1/...`\n- `token` — set automatically by **Setup & Auth › Login** (Bearer)\n- `slider_code` — storefront code, default `home_hero`\n- `slider_uuid` / `item_uuid` / `media_uuid` — captured automatically from List/Show/Create responses\n\n## Flow\n1. Run **Login** (needs an admin role user — super-admin/admin own all `slider.*` permissions)\n2. Run admin endpoints top-to-bottom — ids chain automatically\n3. Storefront calls need no token",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://dev.ramdhan.in",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "slider_code",
+			"value": "home_hero",
+			"type": "string"
+		},
+		{
+			"key": "slider_uuid",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "item_uuid",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "media_uuid",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Setup & Auth",
+			"description": "Run Login first — it stores the Bearer token into the `token` collection variable automatically. The user must belong to a role with `slider.*` permissions (super-admin / admin have all of them).",
+			"item": [
+				{
+					"name": "Login (Get Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Login successful', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});",
+									"if (json.data && json.data.token) {",
+									"    pm.collectionVariables.set('token', json.data.token);",
+									"    console.log('Bearer token saved to collection variable: token');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "`POST /api/v1/auth/login`\n\nReturns `{ data: { user, token } }` — the test script saves `data.token` into the collection's `token` variable used by all admin requests."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Storefront (Public)",
+			"description": "Public endpoints — no authentication.\n\n`GET /api/v1/storefront/sliders/{code}`\n\nReturns the slider only when `is_active = true`; otherwise `404`. Inside the slider, `active_items` contains only items that are active AND inside their schedule window (`starts_at <= now <= ends_at`, null bounds are open-ended). Admin-side fields like every `items` list is hidden here by design.",
+			"item": [
+				{
+					"name": "Get Slider By Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Slider fetched', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});",
+									"pm.test('Has active_items array', function () {",
+									"    pm.expect(json.data).to.have.property('active_items');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/storefront/sliders/{{slider_code}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "storefront", "sliders", "{{slider_code}}"]
+						},
+						"description": "`GET /api/v1/storefront/sliders/home_hero`\n\n`slider_code` variable defaults to `home_hero`. Seeded codes: `home_hero`, `home_secondary`. Change the variable (or paste another code in the URL) to render other placements."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Slider By Code - Not Found Case",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/storefront/sliders/does_not_exist",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "storefront", "sliders", "does_not_exist"]
+						},
+						"description": "`GET /api/v1/storefront/sliders/does_not_exist`\n\nExpected response:\n\n```json\n{\n  \"success\": false,\n  \"message\": \"Resource not found.\",\n  \"data\": null,\n  \"errors\": null,\n  \"meta\": null\n}\n```\n\nHTTP `404` — same when the slider code exists but `is_active = false`."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin › Sliders",
+			"description": "Requires `Authorization: Bearer {{token}}` + `slider.*` permissions.\n\n- `GET    /api/v1/sliders` — `slider.view`\n- `POST   /api/v1/sliders` — `slider.create`\n- `GET    /api/v1/sliders/{uuid}` — `slider.view`\n- `PUT    /api/v1/sliders/{uuid}` — `slider.update`\n- `PATCH  /api/v1/sliders/{uuid}/status` — `slider.update`\n- `DELETE /api/v1/sliders/{uuid}` — `slider.delete` (soft delete)\n- `POST   /api/v1/sliders/{uuid}/restore` — `slider.restore`",
+			"item": [
+				{
+					"name": "List Sliders (pagination, search, filters, sort)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Sliders fetched', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});",
+									"if (json.data && json.data.length) {",
+									"    pm.collectionVariables.set('slider_uuid', json.data[0].uuid);",
+									"    console.log('slider_uuid set to first row: ' + json.data[0].code);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders?page=1&per_page=20&sort_by=created_at&sort_order=desc",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders"],
+							"query": [
+								{ "key": "page", "value": "1", "description": "Page number (Laravel paginator)" },
+								{ "key": "per_page", "value": "20", "description": "Rows per page — min:10, max:100" },
+								{ "key": "sort_by", "value": "created_at", "description": "One of: name | code | placement | is_active | created_at | updated_at" },
+								{ "key": "sort_order", "value": "desc", "description": "asc | desc" },
+								{ "key": "search", "value": "", "description": "Free-text search across name, code, placement (LIKE %term%) — enable to use", "disabled": true },
+								{ "key": "filters[name]", "value": "", "description": "Filter by name (LIKE %value%) — enable to use", "disabled": true },
+								{ "key": "filters[code]", "value": "home_hero", "description": "Filter by code (LIKE %value%) — enable to use", "disabled": true },
+								{ "key": "filters[placement]", "value": "home", "description": "Filter by placement (LIKE %value%) — enable to use", "disabled": true },
+								{ "key": "filters[status]", "value": "1", "description": "Filter by status: 1 = active, 0 = inactive — enable to use", "disabled": true }
+							]
+						},
+						"description": "`GET /api/v1/sliders`\n\n**Pagination** → `page`, `per_page` (10–100)\n\n**Search** → `search=` matches name OR code OR placement\n\n**Filters** (bracket array params):\n| Param | Behaviour |\n|---|---|\n| `filters[name]` | LIKE `%value%` |\n| `filters[code]` | LIKE `%value%` |\n| `filters[placement]` | LIKE `%value%` |\n| `filters[status]` | boolean cast → exact `is_active` |\n\n**Sort** → `sort_by` whitelist `name|code|placement|is_active|created_at|updated_at`; invalid values fall back to `created_at desc`.\n\nRows include nested `items` (each with its `images` gallery); paginator info in `meta`."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Slider",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Slider created (201)', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});",
+									"if (json.data && json.data.uuid) {",
+									"    pm.collectionVariables.set('slider_uuid', json.data.uuid);",
+									"    console.log('slider_uuid saved: ' + json.data.uuid);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Home Hero Slider\",\n    \"code\": \"home_hero\",\n    \"placement\": \"home\",\n    \"is_active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders"]
+						},
+						"description": "`POST /api/v1/sliders` → HTTP `201`.\n\n| Field | Rules |\n|---|---|\n| `name` | required, max:150 |\n| `code` | required, max:100, unique, regex `^[a-z0-9_]+$` |\n| `placement` | nullable, max:100 (`home`, `product`, ...) |\n| `is_active` | optional boolean |\n\nTest script stores the new UUID into `slider_uuid` for chaining."
+					},
+					"response": []
+				},
+				{
+					"name": "Show Slider",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Slider fetched', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});",
+									"if (json.data && json.data.items && json.data.items.length) {",
+									"    pm.collectionVariables.set('item_uuid', json.data.items[0].uuid);",
+									"    console.log('item_uuid saved: ' + json.data.items[0].title);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders/{{slider_uuid}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders", "{{slider_uuid}}"]
+						},
+						"description": "`GET /api/v1/sliders/{uuid}`\n\nFull admin view — ALL items (`items`) ordered by `sort_order`, each with its `images` gallery. First item's uuid is captured into `item_uuid`."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Slider",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Home Hero Slider — Updated\",\n    \"placement\": \"home\",\n    \"is_active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders/{{slider_uuid}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders", "{{slider_uuid}}"]
+						},
+						"description": "`PUT /api/v1/sliders/{uuid}`\n\nAll fields optional (partial update):\n- `name` max:150\n- `code` unique, regex `^[a-z0-9_]+$` (ignores own row when unchanged)\n- `placement` max:100\n- `is_active` boolean"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Slider Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"is_active\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders/{{slider_uuid}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders", "{{slider_uuid}}", "status"]
+						},
+						"description": "`PATCH /api/v1/sliders/{uuid}/status`\n\nBody: `{ \"is_active\": true|false }` (required boolean). Deactivating a slider immediately hides it from the storefront endpoint."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Slider (soft)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Slider deleted', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders/{{slider_uuid}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders", "{{slider_uuid}}"]
+						},
+						"description": "`DELETE /api/v1/sliders/{uuid}`\n\nSoft-deletes the slider. Its items remain attached for restore."
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Slider",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders/{{slider_uuid}}/restore",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders", "{{slider_uuid}}", "restore"]
+						},
+						"description": "`POST /api/v1/sliders/{uuid}/restore`\n\nRestores a soft-deleted slider (requires `slider.restore`). Only works on trashed rows — an active slider returns `404` since the route model binding excludes trashed by default.\n\nRun **Delete** before this one when testing the pair."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin › Slider Items",
+			"description": "Nested under a slider — every item route requires `slider.update`:\n\n- `POST   /api/v1/sliders/{slider_uuid}/items`\n- `PUT    /api/v1/sliders/{slider_uuid}/items/{item_uuid}`\n- `DELETE /api/v1/sliders/{slider_uuid}/items/{item_uuid}`\n\nThere is no dedicated item list endpoint — items come nested inside Show Slider / List Sliders responses ordered by `sort_order`. Item images attach via the Media module (`collection = slider`) using the Media › Upload request.",
+			"item": [
+				{
+					"name": "Create Slider Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Item created (201)', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});",
+									"if (json.data && json.data.uuid) {",
+									"    pm.collectionVariables.set('item_uuid', json.data.uuid);",
+									"    console.log('item_uuid saved: ' + json.data.uuid);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"RamDhan Mega Sale\",\n    \"subtitle\": \"Up to 50% off everything\",\n    \"button_text\": \"Shop Now\",\n    \"button_url\": \"/products\",\n    \"sort_order\": 0,\n    \"is_active\": true,\n    \"starts_at\": null,\n    \"ends_at\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders/{{slider_uuid}}/items",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders", "{{slider_uuid}}", "items"]
+						},
+						"description": "`POST /api/v1/sliders/{slider_uuid}/items` → HTTP `201`\n\n| Field | Rules |\n|---|---|\n| `title` | **required**, max:191 |\n| `subtitle` | nullable, max:255 |\n| `button_text` | nullable, max:100 |\n| `button_url` | nullable, max:500 |\n| `sort_order` | optional integer ≥ 0 |\n| `is_active` | optional boolean |\n| `starts_at` | nullable, `Y-m-d H:i:s` — schedule start |\n| `ends_at` | nullable, `Y-m-d H:i:s`, must be ≥ `starts_at` |\n\nScheduling example:\n```json\n\"starts_at\": \"2026-08-01 00:00:00\",\n\"ends_at\":   \"2026-08-31 23:59:59\"\n```\nOutside the window the item never appears in storefront `active_items`. New uuid is captured into `item_uuid`."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Slider Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"RamDhan Mega Sale — Updated\",\n    \"subtitle\": \"Updated subtitle\",\n    \"sort_order\": 1,\n    \"is_active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders/{{slider_uuid}}/items/{{item_uuid}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders", "{{slider_uuid}}", "items", "{{item_uuid}}"]
+						},
+						"description": "`PUT /api/v1/sliders/{slider_uuid}/items/{item_uuid}`\n\nSame fields as create, all optional (partial update). `starts_at`/`ends_at` accept the same `Y-m-d H:i:s` format with the `after_or_equal:starts_at` rule. Responds with the fresh item including its `images` gallery."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Slider Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Item deleted', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sliders/{{slider_uuid}}/items/{{item_uuid}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sliders", "{{slider_uuid}}", "items", "{{item_uuid}}"]
+						},
+						"description": "`DELETE /api/v1/sliders/{slider_uuid}/items/{item_uuid}`\n\nRemoves a single slide from the slider.\n\nRun this **after** finishing item/media tests — once deleted, `item_uuid` no longer resolves (404 on further calls)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Media (attach slider images)",
+			"description": "Slider images live in the shared `media` table:\n\n- Slider-level image → `mediable_type=slider`, `mediable_uuid={{slider_uuid}}`\n- Slide (item) image → `mediable_type=slider_item`, `mediable_uuid={{item_uuid}}`, `collection=slider`\n\nUpload through `POST /api/v1/media` (multipart). The uploaded row attaches to the model immediately — no separate attach call needed.",
+			"item": [
+				{
+					"name": "Upload Slider Item Image",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Media uploaded', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});",
+									"if (json.data && json.data.uuid) {",
+									"    pm.collectionVariables.set('media_uuid', json.data.uuid);",
+									"    console.log('media_uuid saved: ' + json.data.uuid);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Required — max 10MB; mimes: jpg, jpeg, png, webp, gif, svg, pdf, doc(x), xls(x), mp4, mov"
+								},
+								{
+									"key": "mediable_type",
+									"value": "slider_item",
+									"type": "text",
+									"description": "One of: product | category | brand | user | slider | slider_item — use slider_item for slide banners"
+								},
+								{
+									"key": "mediable_uuid",
+									"value": "{{item_uuid}}",
+									"type": "text",
+									"description": "UUID of the owning model — the created slider item's uuid (from Create Slider Item)"
+								},
+								{
+									"key": "collection",
+									"value": "slider",
+									"type": "text",
+									"description": "Gallery bucket — use `slider` for slider images"
+								},
+								{
+									"key": "title",
+									"value": "RamDhan Mega Sale Banner",
+									"type": "text"
+								},
+								{
+									"key": "alt_text",
+									"value": "RamDhan Mega Sale banner",
+									"type": "text",
+									"description": "Accessibility text — good for SEO"
+								},
+								{
+									"key": "description",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "sort_order",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "is_primary",
+									"value": "false",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/media",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "media"]
+						},
+						"description": "`POST /api/v1/media` — multipart/form-data. Uploads the file to `storage/app/public/media/...` and attaches it to `App\\Modules\\Slider\\Models\\SliderItem` in one call.\n\nFor a **slider-level** image instead: set `mediable_type=slider` and `mediable_uuid={{slider_uuid}}`.\n\nAfter upload, re-run **Show Slider / Get Slider By Code** — the image appears under the item's `images` array with its public `url`. Captured uuid lands in `media_uuid`."
+					},
+					"response": []
+				},
+				{
+					"name": "List Media",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/media?page=1&per_page=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "media"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "per_page", "value": "20", "description": "Rows per page — min:10, max:100 (standard list request)" }
+							]
+						},
+						"description": "`GET /api/v1/media`\n\nPaginated media library. Each row: `uuid`, `original_name`, `file_name`, `url`, `mime_type`, `size`, `title`, `alt_text`, `type`, `sort_order`, `is_primary`, `mediable_type`, `mediable_id`, `collection`."
+					},
+					"response": []
+				},
+				{
+					"name": "Show Media",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/media/{{media_uuid}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "media", "{{media_uuid}}"]
+						},
+						"description": "`GET /api/v1/media/{uuid}` — single media row with its resolved public `url`."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Media Metadata",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated banner title\",\n    \"alt_text\": \"Updated alt text\",\n    \"sort_order\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/media/{{media_uuid}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "media", "{{media_uuid}}"]
+						},
+						"description": "`PUT /api/v1/media/{uuid}` — update metadata (`title`, `alt_text`, `description`, `sort_order`, ...). The binary file is not replaced."
+					},
+					"response": []
+				},
+				{
+					"name": "Set Primary Media",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/media/{{media_uuid}}/primary",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "media", "{{media_uuid}}", "primary"]
+						},
+						"description": "`PATCH /api/v1/media/{uuid}/primary` — flags this media as the primary image of its parent (`is_primary = 1`)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Media (soft)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Media deleted', function () {",
+									"    pm.expect(json.success).to.eql(true);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/media/{{media_uuid}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "media", "{{media_uuid}}"]
+						},
+						"description": "`DELETE /api/v1/media/{uuid}` — soft-deletes the media row. Run last in the media flow; further calls with the same uuid return 404 unless restored."
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Media",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/media/{{media_uuid}}/restore",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "media", "{{media_uuid}}", "restore"]
+						},
+						"description": "`POST /api/v1/media/{uuid}/restore` — restores a soft-deleted media row. Run after Delete Media when you want to recover it."
+					},
+					"response": []
+				},
+				{
+					"name": "Force Delete Media",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/media/{{media_uuid}}/force",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "media", "{{media_uuid}}", "force"]
+						},
+						"description": "`DELETE /api/v1/media/{uuid}/force` — permanently removes the media row and its file from disk. Irreversible."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

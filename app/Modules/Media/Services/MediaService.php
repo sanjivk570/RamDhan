@@ -9,7 +9,8 @@ use App\Modules\Media\Repositories\MediaRepository;
 use App\Modules\Product\Models\Product;
 use App\Modules\User\Models\User;
 use App\Modules\Category\Models\Category;
-//use App\Modules\Brand\Models\Brand;
+use App\Modules\Slider\Models\Slider;
+use App\Modules\Slider\Models\SliderItem;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -244,6 +245,9 @@ class MediaService
             //"brand" => Brand::class,
 
             "user" => User::class,
+
+            "slider" => Slider::class,
+            "slider_item" => SliderItem::class,
         ];
 
         if (!isset($models[$type])) {
