@@ -58,8 +58,10 @@ class InventoryStock extends Model
 
     protected static function booted()
     {
-        static::creating(function ($model) {
-            $model->uuid ??= (string) Str::uuid();
+        static::creating(function ($stock) {
+            if (empty($stock->uuid)) {
+                $stock->uuid = (string) Str::uuid();
+            }
         });
     }
 

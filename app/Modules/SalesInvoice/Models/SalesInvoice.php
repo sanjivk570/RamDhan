@@ -58,7 +58,7 @@ final class SalesInvoice extends Model
                     (string) ((int) self::withTrashed()->max("id") + 1),
                     6,
                     "0",
-                    0
+                    STR_PAD_LEFT
                 );
         });
     }

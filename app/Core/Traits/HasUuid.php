@@ -12,10 +12,10 @@ trait HasUuid
 {
     protected static function bootHasUuid(): void
     {
-        // static::creating(function (Model $model): void {
-        //     if (empty($model->uuid)) {
-        //         $model->uuid = (string) Str::uuid();
-        //     }
-        // });
+        static::creating(function (Model $model): void {
+            if (empty($model->uuid)) {
+                $model->uuid = (string) Str::uuid();
+            }
+        });
     }
 }
